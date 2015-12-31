@@ -2,7 +2,7 @@
 	"manifest_version": 2,
 	"name": "Time Keeper",
 	"description": "Task Time Keeper",
-	"version": "1.0.1",
+	"version": "1.0.3",
 
 	"icons": { 
 		"16": "img/icon16.png",

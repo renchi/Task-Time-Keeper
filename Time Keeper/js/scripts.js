@@ -193,55 +193,6 @@ var taskInterface = {
       $('#removeModal').modal('toggle');
     });
 
-    $( "#UpdateSave" ).bind( "click", function( event ) {
-      event.preventDefault();
-
-      var id = $('#editTaskID').val(); // get id
-      var project_name = $('#editProjectName').val(); // get name
-      var name = $('#editTaskName').val(); // get name
-
-      var dataToSet1 = $('#editTaskStart').val();
-      var momentStarted = new moment(dataToSet1);
-      var timeStarted = momentStarted.valueOf(); // get task time
-
-      var dataToSet2 = $('#editTaskEnd').val();
-      var momentEnded = new moment(dataToSet2);
-      var timeEnded = momentEnded.valueOf(); // get task time
-
-      var newDuration = timeEnded - timeStarted; // time diff in milliseconds
-      var dateStarted = momentStarted.format("MM-DD-YYYY"); // get task time
-
-      db.transaction(function (tx) {
-        tx.executeSql("UPDATE timeInfo SET project_name = ?, name = ?, startDate = ?, startTime = ?, endTime = ?, duration = ? WHERE id = ?",
-                       [project_name, name, dateStarted, timeStarted, timeEnded, newDuration, id], function (tx, results) {
-          taskInterface.index();
-        }, onError);
-      });
-
-      $('#updateModal').modal('toggle');
-    });
-
-    $( "#play" ).bind( "click", function( event ) {
-      var fTask = $('#newTask').val();
-      var fProj = $('#newProject').val();
-
-      if (fTask == null || fTask == "" || fProj == null || fProj == "") {
-          alert("Task and project names must be filled out");
-          return false;
-      }
-
-      db.transaction(function (tx) {
-        tx.executeSql('SELECT * FROM timeInfo WHERE running = ?', [1], function (tx, results) {
-          if (results.rows.length > 0) {
-            taskInterface.toggleTimer(results.rows.item(0).ID);
-          }
-          else{
-            tasks.insert(taskInterface.nextID(), $('#newProject').val(), $('#newTask').val() );
-          }
-        }, null, onError);
-      });
-    });
-
     $( "#addEntry" ).bind( "click", function( event ) {
         var timeStarted = new Date();
         var momentStarted = new moment(timeStarted);
@@ -251,44 +202,74 @@ var taskInterface = {
         $('#addTaskName').val("");
     });
 
-    $( "#AddSave" ).bind( "click", function( event ) {
-      var fTask = $('#addTaskName').val();
-      var fProj = $('#addProjectName').val();
-
-      if (fTask == null || fTask == "" || fProj == null || fProj == "") {
-          alert("Task and project names must be filled out");
-          return false;
+    // Methods in running the task timer
+    $( "#play" ).bind( "click", function( event ) {
+      taskInterface.playHandler();
+    });
+    $('#newTask').keydown(function ( event ) {
+      if (event.keyCode == 13) {
+        taskInterface.playHandler();
       }
-
-      event.preventDefault();
-
-      db.transaction(function (tx) {
-        var id = taskInterface.nextID(); // get id
-        var project_name = $('#addProjectName').val(); // get name
-        var name = $('#addTaskName').val(); // get name
-
-        var dataToSet1 = $('#addTaskStart').val();
-        var momentStarted = new moment(dataToSet1);
-        var timeStarted = momentStarted.valueOf(); // get task time
-
-        var dataToSet2 = $('#addTaskEnd').val();
-        var momentEnded = new moment(dataToSet2);
-        var timeEnded = momentEnded.valueOf(); // get task time
-
-        var newDuration = timeEnded - timeStarted; // time diff in milliseconds
-        var dateStarted = momentStarted.format("MM-DD-YYYY"); // get task time
-
-        tx.executeSql("INSERT INTO timeInfo (id, project_name, name, running, startDate, startTime, endTime, duration) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            [id, project_name, name, 0, dateStarted, timeStarted, timeEnded, newDuration],
-            function (tx, result) {
-              taskInterface.index();
-            },
-            onError);
-      });
-
-      $('#myModal').modal('toggle');
+    });
+    $('#newProject').keydown(function ( event ) {
+      if (event.keyCode == 13) {
+        taskInterface.playHandler();
+      }
     });
 
+
+    // Methods in saving data entered in Manual Entry window
+    $( "#AddSave" ).bind( "click", function( event ) {
+      taskInterface.addSaveHandler(event);
+    });
+    $('#addProjectName').keydown(function ( event ) {
+      if (event.keyCode == 13) {
+        taskInterface.addSaveHandler(event);
+      }
+    });
+    $('#addTaskName').keydown(function ( event ) {
+      if (event.keyCode == 13) {
+        taskInterface.addSaveHandler(event);
+      }
+    });
+    $('#addTaskStart').keydown(function ( event ) {
+      if (event.keyCode == 13) {
+        taskInterface.addSaveHandler(event);
+      }
+    });
+    $('#addTaskEnd').keydown(function ( event ) {
+      if (event.keyCode == 13) {
+        taskInterface.addSaveHandler(event);
+      }
+    });
+
+    // Methods in saving edited item in Edit window
+   $( "#UpdateSave" ).bind( "click", function( event ) {
+      taskInterface.updateSaveHandler(event);
+    });
+    $('#editProjectName').keydown(function ( event ) {
+      if (event.keyCode == 13) {
+      taskInterface.updateSaveHandler(event);
+      }
+    });
+    $('#editTaskName').keydown(function ( event ) {
+      if (event.keyCode == 13) {
+      taskInterface.updateSaveHandler(event);
+      }
+    });
+    $('#editTaskStart').keydown(function ( event ) {
+      if (event.keyCode == 13) {
+      taskInterface.updateSaveHandler(event);
+      }
+    });
+    $('#editTaskEnd').keydown(function ( event ) {
+      if (event.keyCode == 13) {
+      taskInterface.updateSaveHandler(event);
+      }
+    });
+
+
+    
     // export all tasks
     $("#exportEntries").bind( "click", function( event ) {
       var currentTime = new Date();
@@ -657,6 +638,94 @@ var taskInterface = {
           alert("Task " + id + " not found sorry!");
         }
       }, null);
+    });
+  },
+
+
+  addSaveHandler: function ( event ) {
+    var fTask = $('#addTaskName').val();
+    var fProj = $('#addProjectName').val();
+
+    if (fTask == null || fTask == "" || fProj == null || fProj == "") {
+        alert("Task and project names must be filled out");
+        return false;
+    }
+
+    event.preventDefault();
+
+    db.transaction(function (tx) {
+      var id = taskInterface.nextID(); // get id
+      var project_name = $('#addProjectName').val(); // get name
+      var name = $('#addTaskName').val(); // get name
+
+      var dataToSet1 = $('#addTaskStart').val();
+      var momentStarted = new moment(dataToSet1);
+      var timeStarted = momentStarted.valueOf(); // get task time
+
+      var dataToSet2 = $('#addTaskEnd').val();
+      var momentEnded = new moment(dataToSet2);
+      var timeEnded = momentEnded.valueOf(); // get task time
+
+      var newDuration = timeEnded - timeStarted; // time diff in milliseconds
+      var dateStarted = momentStarted.format("MM-DD-YYYY"); // get task time
+
+      tx.executeSql("INSERT INTO timeInfo (id, project_name, name, running, startDate, startTime, endTime, duration) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+          [id, project_name, name, 0, dateStarted, timeStarted, timeEnded, newDuration],
+          function (tx, result) {
+            taskInterface.index();
+          },
+          onError);
+    });
+
+    $('#myModal').modal('toggle');
+  },
+
+  updateSaveHandler: function ( event ) {
+    event.preventDefault();
+
+    var id = $('#editTaskID').val(); // get id
+    var project_name = $('#editProjectName').val(); // get name
+    var name = $('#editTaskName').val(); // get name
+
+    var dataToSet1 = $('#editTaskStart').val();
+    var momentStarted = new moment(dataToSet1);
+    var timeStarted = momentStarted.valueOf(); // get task time
+
+    var dataToSet2 = $('#editTaskEnd').val();
+    var momentEnded = new moment(dataToSet2);
+    var timeEnded = momentEnded.valueOf(); // get task time
+
+    var newDuration = timeEnded - timeStarted; // time diff in milliseconds
+    var dateStarted = momentStarted.format("MM-DD-YYYY"); // get task time
+
+    db.transaction(function (tx) {
+      tx.executeSql("UPDATE timeInfo SET project_name = ?, name = ?, startDate = ?, startTime = ?, endTime = ?, duration = ? WHERE id = ?",
+                     [project_name, name, dateStarted, timeStarted, timeEnded, newDuration, id], function (tx, results) {
+        taskInterface.index();
+      }, onError);
+    });
+
+    $('#updateModal').modal('toggle');
+  },
+
+  playHandler: function () {
+    var fTask = $('#newTask').val();
+    var fProj = $('#newProject').val();
+
+    if (fTask == null || fTask == "" || fProj == null || fProj == "") {
+        alert("Task and project names must be filled out");
+        return false;
+    }
+
+    db.transaction(function (tx) {
+      tx.executeSql('SELECT * FROM timeInfo WHERE running = ?', [1], function (tx, results) {
+        if (results.rows.length > 0) {
+          taskInterface.toggleTimer(results.rows.item(0).ID);
+        }
+        else{
+          tasks.insert(taskInterface.nextID(), $('#newProject').val(), $('#newTask').val() );
+        }
+      }, null, onError);
     });
   },
 
