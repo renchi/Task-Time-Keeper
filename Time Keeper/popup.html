@@ -1,0 +1,422 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="description" content="A basic template for a Chrome Extension using Twitter Bootstrap 3">
+        <meta name="author" content="Elliot Hesp">
+        
+        <title>Task Time Keeper</title>
+
+        <!-- Cascading Style Sheets -->
+        <link href="css/animate.min.css" rel="stylesheet" media="screen">  
+        <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+        <link href="css/custom.css" rel="stylesheet" media="screen">    
+        <link href="css/font-awesome.min.css" rel="stylesheet" media="screen">    
+        <link rel="stylesheet" href="css/styles.css" />
+        <link href="css/bootstrap-table.min.css" rel="stylesheet" media="screen">   
+        <link href="css/jquery-ui.min.css" rel="stylesheet" media="screen">   
+    </head>
+    
+    <body>
+    
+    <nav class="navbar navbar-trans navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapsible">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+                <a class="navbar-brand" href="#">.</a>
+            </div>
+            <div class="navbar-collapse collapse" id="navbar-collapsible">
+                <ul class="nav navbar-nav navbar-left">
+                    <li><a href="#section1">Timer</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reports <b class="caret"></b>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="#section2" class="summary button">Summary</a>
+                            </li>
+                            <li>
+                                <a href="#section3" class="dailyDuration button">Daily</a>
+                            </li>
+                        </ul>
+                        </a>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Actions <b class="caret"></b>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a id="deleteEntries" data-toggle="modal" data-target="#deleteAllModal">
+                                    <span class="glyphicon glyphicon-trash"></span>Delete entries</a>
+                            </li>
+                            <li>
+                                <a id="exportEntries" data-toggle="modal" data-target="#exportModal">
+                                    <span class="glyphicon glyphicon-export"></span>Export raw data</a>
+                            </li>
+                        </ul>
+                        </a>
+                    </li>
+                    <li>&nbsp;</li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+        
+
+<section class="container-fluid center" id="section1">
+    <div id="timer-toolbar">
+        <div class="form-inline" role="form">                       
+            <div class="form-group">
+                <div class="input-group">
+                    <input id="newTask" class="form-control transparent-input input-sm" type="text" placeholder="Task" style="width:150px;"> 
+                </div>
+            </div>
+             <div class="form-group">       
+                <div class="input-group">
+                    <input id="newProject" class="form-control transparent-input input-sm" type="text" placeholder="Project" style="width:100px;">             
+                </div>
+            </div>
+             <div class="form-group">       
+                <div class="input-group">
+                    <label class="form-control transparent-input input-sm" type="text" style="width:70px;"> 
+                    <span id="timer">0 sec</span>
+                    </label> 
+                </div>
+            </div>
+            <div class="form-group">       
+                <div class="input-group">
+                    <a id="play" href="javascript:void(0)"><span class="glyphicon glyphicon-play-circle icon-success icon-main-size"></span></a>
+                </div>
+            </div>
+            <div class="form-group">       
+                <div class="input-group">
+                    <a id="addEntry" href="javascript:void(0)" data-toggle="modal" data-target="#myModal">
+                        <span class="glyphicon glyphicon-plus-sign icon-info icon-main-size"></span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <table id="table"
+               data-toggle="table"
+               data-toolbar="#timer-toolbar"
+               data-height="534"
+               data-method="timeInfoData()"
+               data-search="true"
+               data-icon-size="sm"
+               data-classes = "table table-hover table-no-bordered"
+               data-pagination="true">
+            <thead>
+            <tr>
+                <!-- <th data-field="state" data-checkbox="true"></th> -->
+                <th data-field="id" data-visible="false">ID</th>
+                <th data-field="taskName" data-sortable="true" data-width=40%>Task</th>
+                <th data-field="projectName" data-sortable="true" data-width=20%>Project</th>
+                <th data-field="date" data-halign="center" data-sortable="true" data-width=5%>Date</th>
+                <th data-field="startStopTime" data-halign="center" data-align="center" data-width=20%>
+                    <span class="glyphicon glyphicon-time"></span></th>
+                <th data-field="duration" data-visible="false"></th>
+                <th data-field="operate" data-align="right" data-formatter="operateFormatter" data-events="operateEvents" data-width=15%></th>
+                <th data-field="running" data-visible="false">running</th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+</section>
+
+<section class="container-fluid" id="section2">
+    <div class="v-center">
+        <h2 class="text-center">Project Summary</h2>
+    </div>
+    <div id="summaryToolbar">
+        <div class="form-inline" role="form">   
+             <div class="form-group">       
+                <div class="input-group">
+                    <label class="input-sm" type="text">From</label> 
+                </div>
+            </div>                    
+            <div class="form-group">
+                <div class="input-group">
+                    <input type="text" id="from" name="from" class="form-control input-sm" style="width:90px;">               
+                </div>
+            </div>
+             <div class="form-group">       
+                <div class="input-group">
+                    <label class="input-sm" type="text">To</label> 
+                </div>
+            </div>  
+             <div class="form-group">       
+                <div class="input-group">
+                     <input type="text" id="to" name="to" class="form-control input-sm" style="width:90px;">         
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <table id="summaryTable"
+            data-toolbar="#summaryToolbar"
+               data-show-export="true"
+               data-toggle="table"
+               data-show-columns="true"
+               data-classes = "table table-hover table-no-bordered"
+               data-icon-size="sm"
+               data-height="400">
+            <thead>
+            <tr>
+                <th data-field="projectName" data-sortable="true" data-width=30%>Project</th>
+                <th data-field="duration" data-sortable="true" data-width=5%>Duration (H)</th>
+                <th data-field="details" data-visible="false" data-width=65%>Tasks</th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+    <div id="custom-toolbar">
+        <div class="form-inline">
+            <div class="form-group">
+                <div class="input-group">
+                    <h3><span id="ProjectTotal" class = "label label-primary"></span></h3>
+                </div>
+            </div>
+        </div> 
+    </div>
+    <!--/row-->
+    <div class="row">
+        <br>
+    </div>
+</section>
+
+<section class="container-fluid" id="section3">
+    <div class="v-center">
+        <h2 class="text-center">Daily Summary</h2>
+        <br>
+    </div>
+    <div id="dailyToolbar">
+        <div class="form-inline" role="form">   
+             <div class="form-group">       
+                <div class="input-group">
+                    <label class="input-sm" type="text">From</label> 
+                </div>
+            </div>                    
+            <div class="form-group">
+                <div class="input-group">
+                    <input type="text" id="fromDaily" name="from" class="form-control transparent-input input-sm" style="width:90px;">               
+                </div>
+            </div>
+             <div class="form-group">       
+                <div class="input-group">
+                    <label class="input-sm" type="text">To</label> 
+                </div>
+            </div>  
+             <div class="form-group">       
+                <div class="input-group">
+                     <input type="text" id="toDaily" name="to" class="form-control transparent-input input-sm" style="width:90px;">         
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table id="dailyTable"
+           data-toggle="table"
+           data-toolbar="#dailyToolbar"
+           data-classes = "table table-no-bordered"
+           data-show-export="true"
+           data-detail-view="true"
+           data-detail-formatter="detailFormatter"
+           data-show-refresh="true"
+           data-icon-size="sm"
+           data-height="400">
+        <thead>
+        <tr>
+            <th data-field="taskDate" data-sortable="true">Date</th>
+            <th data-field="duration" data-sortable="true">Duration (H)</th>
+        </tr>
+        </thead>
+    </table>
+</section>
+
+<footer id="footer">
+ 
+</footer>
+
+<div class="scroll-up">
+    <a href="#"><span class="glyphicon glyphicon-home"></span></a>
+</div>
+
+<div id="myModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h2 class="text-center"><br>Add Task Time Entry</h2>
+            </div>
+            <div class="modal-body row">
+                <form>
+                    <input id="editTaskID" type="hidden">
+                    <div class="input-group">
+                        <span class="input-group-addon">Project</span>
+                        <input id="addProjectName" type="text" class="form-control input-md">
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon" style="padding-right:28px;">Task</span>
+                        <input id="addTaskName" type="text" class="form-control input-md">
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon" style="padding-right:26px;">Start</span>
+                        <input id="addTaskStart" type="text" class="form-control input-md">
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon" style="padding-right:33px;">End</span>
+                        <input id="addTaskEnd" type="text" class="form-control input-md">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-default btn-lg" data-dismiss="modal">Cancel</button>
+                        <a id="AddSave" class="btn btn-primary btn-lg btn-ok">Save</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="deleteAllModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h2 class="text-center"><br>Delete Entries</h2>
+            </div>
+            <div class="modal-body row">
+                <form>
+                    <label type="text" class="input-lg">Are you sure you want to delete entries for this date range?</label> 
+                    <div class="input-group">
+                        <span style="padding-right:50px;"></span>
+                        <span class="input-group-addon" style="padding-right:26px;">From</span>
+                        <input type="text" id="deleteFrom" name="from" class="form-control input-md" style="width:120px;">    
+                        <span class="input-group-addon" style="padding-right:33px;">To</span>
+                        <input type="text" id="deleteTo" name="from" class="form-control input-md" style="width:120px;">    
+                    </div>
+                     <div class="modal-footer">
+                        <button class="btn btn-default btn-lg" data-dismiss="modal">No</button>
+                        <a id="removeEntries" class="btn btn-danger btn-lg btn-ok">Yes</a>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="removeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h2 class="text-center"><br>Delete Entry</h2>
+            </div>
+            <div class="modal-body row">
+                <label type="text" class="input-lg">Are you sure you want to delete this entry?</label> 
+                <input id="deleteTaskID" type="hidden">
+                <div class="input-group">
+                    <span class="input-group-addon">Project</span>
+                    <label id="deleteProjectName" type="text" class="form-control input-md">
+                </div>
+                <div class="input-group">
+                    <span class="input-group-addon" style="padding-right:28px;">Task</span>
+                    <label id="deleteTaskName" type="text" class="form-control input-md">
+                </div>
+                <div class="input-group">
+                    <span class="input-group-addon" style="padding-right:26px;">Start</span>
+                    <label id="deleteTaskStart" type="text" class="form-control input-md">
+                </div>
+                <div class="input-group">
+                    <span class="input-group-addon" style="padding-right:33px;">End</span>
+                    <label id="deleteTaskEnd" type="text" class="form-control input-md">
+                </div>
+            </div> 
+             <div class="modal-footer">
+                <button class="btn btn-default btn-lg" data-dismiss="modal">No</button>
+                <a id="removeEntry" class="btn btn-danger btn-lg btn-ok">Yes</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="updateModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h2 class="text-center"><br>Edit Task Info</h2>
+            </div>
+            <div class="modal-body row">
+                <form>
+                    <input id="editTaskID" type="hidden">
+                    <div class="input-group">
+                        <span class="input-group-addon">Project</span>
+                        <input id="editProjectName" type="text" class="form-control input-md">
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon" style="padding-right:28px;">Task</span>
+                        <input id="editTaskName" type="text" class="form-control input-md">
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon" style="padding-right:26px;">Start</span>
+                        <input id="editTaskStart" type="text" class="form-control input-md">
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon" style="padding-right:33px;">End</span>
+                        <input id="editTaskEnd" type="text" class="form-control input-md">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-default btn-lg" data-dismiss="modal">Cancel</button>
+                        <a id="UpdateSave" class="btn btn-primary btn-lg btn-ok">Save</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="exportModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h2 class="text-center"><br>Export data</h2>
+            </div>
+            <div class="modal-body row">
+                <label type="text" class="input-lg">Export raw data into csv file for this date range.</label> 
+                <form>
+                    <div class="input-group">
+                        <span style="padding-right:50px;"></span>
+                        <span class="input-group-addon" style="padding-right:26px;">From</span>
+                        <input type="text" id="exportFrom" name="from" class="form-control input-md" style="width:120px;">    
+                        <span class="input-group-addon" style="padding-right:33px;">To</span>
+                        <input type="text" id="exportTo" name="from" class="form-control input-md" style="width:120px;">    
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-default btn-lg" data-dismiss="modal">Cancel</button>
+                        <a id="ExportOK" class="btn btn-primary btn-lg btn-ok">OK</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
+    <script type="text/javascript" src="js/base64.js"></script>
+    <script type="text/javascript" src="js/ga.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>   
+    <script type="text/javascript" src="js/moment.min.js"></script>   
+    <script type="text/javascript" src="js/tableExport.js"></script>
+    <script type="text/javascript" src="js/scripts.js"></script>
+    <script type="text/javascript" src="js/init.js"></script>
+    <script type="text/javascript" src="js/bootstrap-table.min.js"></script>  
+    <script type="text/javascript" src="js/bootstrap-table-export.min.js"></script>  
+    </body>
+</html>
