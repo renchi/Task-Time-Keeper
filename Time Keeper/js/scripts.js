@@ -123,6 +123,8 @@ var taskInterface = {
   consolidatedProjSummary: new Array,
   dailySummaryRows: new Array,
   consolidatedDailySummary: new Array,
+  dailyProjectSummary: new Array,
+  dailyProjectSummaryCopy: new Array,
 
   bind: function () {
 
@@ -479,8 +481,47 @@ var taskInterface = {
 
           taskInterface.consolidatedDailySummary.push({
               taskDate: results.rows.item(0).startDate,
-              duration:taskInterface.dailySummaryRows[0].duration,
               details: detailsData
+          });
+          taskInterface.dailyProjectSummaryCopy.shift();
+          $('.icon-plus').css('color','green');
+        } // if
+      }
+
+      if (taskInterface.dailyProjectSummaryCopy.length > 0) 
+      {
+        db.transaction(function (tx) {
+          var row = taskInterface.dailyProjectSummaryCopy[0];
+          tx.executeSql('SELECT DISTINCT project_name, name, startDate, SUM(duration) AS durationSum FROM timeInfo WHERE startDate = ? GROUP BY name', 
+            [row.taskDate], taskInterface.nextDailyRecord, null); 
+        }); //dbtransaction            
+      } 
+  }, 
+
+  nextDailyRecordWithProj: function (tx, results) {
+      if ( results != 0)
+      {
+        var len = results.rows.length;        
+        if (len > 0) 
+        {  
+          var detailsData = "";
+          for (var i = 0; i < len; i++) 
+          {
+            var task = results.rows.item(i);
+            var roundedHours = Math.round10(moment.duration(task.durationSum).asHours(), -2);
+            detailsData = detailsData + '<p>' + roundedHours + " H = " + task.project_name + "</p>";
+          }
+
+          taskInterface.dailyProjectSummary.push({
+              taskDate: results.rows.item(0).startDate,
+              duration: taskInterface.dailySummaryRows[0].duration,
+              dailySumByProject: detailsData
+          });
+          
+          taskInterface.dailyProjectSummaryCopy.push({
+              taskDate: results.rows.item(0).startDate,
+              duration: taskInterface.dailySummaryRows[0].duration,
+              dailySumByProject: detailsData
           });
           taskInterface.dailySummaryRows.shift();
           $('.icon-plus').css('color','green');
@@ -491,10 +532,14 @@ var taskInterface = {
       {
         db.transaction(function (tx) {
           var row = taskInterface.dailySummaryRows[0];
-          tx.executeSql('SELECT DISTINCT project_name, name, startDate, SUM(duration) AS durationSum FROM timeInfo WHERE startDate = ? GROUP BY name', 
-            [row.taskDate], taskInterface.nextDailyRecord, null); 
+          tx.executeSql('SELECT DISTINCT project_name, name, startDate, SUM(duration) AS durationSum FROM timeInfo WHERE startDate = ? GROUP BY project_name', 
+            [row.taskDate], taskInterface.nextDailyRecordWithProj, null); 
         }); //dbtransaction            
       } 
+      else
+      {
+        $('#dailyTable').bootstrapTable('load', taskInterface.dailyProjectSummary );
+      }
   }, 
 
   dailySummary: function () {
@@ -533,6 +578,8 @@ var taskInterface = {
   GetDailySummary: function (dpStartDate, dpEndDate) {
     taskInterface.dailySummaryRows = [];
     taskInterface.consolidatedDailySummary = [];
+    taskInterface.dailyProjectSummary = [];
+    taskInterface.dailyProjectSummaryCopy = [];
     db.transaction(function (tx) {
       tx.executeSql('SELECT startDate, SUM(duration) AS durationSum FROM timeInfo WHERE startDate BETWEEN strftime("%m-%d-%Y", ?) AND strftime("%m-%d-%Y", ?) GROUP BY startDate ORDER BY startDate DESC', [dpStartDate, dpEndDate], function (tx, results) {
         var len = results.rows.length, i;
@@ -540,17 +587,14 @@ var taskInterface = {
         if (len > 0) {
           for (i = 0; i < len; i++) {
             var task = results.rows.item(i);
-            rows.push({
-                taskDate: task.startDate,
-                duration: Math.round10(moment.duration(task.durationSum).asHours(), -2)
-            });
             taskInterface.dailySummaryRows.push({
                 taskDate: task.startDate,
                 duration: Math.round10(moment.duration(task.durationSum).asHours(), -2)
             });
           } // for
         } // if
-        $('#dailyTable').bootstrapTable('load', rows );
+        //$('#dailyTable').bootstrapTable('load', rows );
+        taskInterface.nextDailyRecordWithProj(0,0);
       }, null); // executesql
     }); //dbtransaction
   },
