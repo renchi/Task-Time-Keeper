@@ -340,7 +340,10 @@ var taskInterface = {
     });
 
     $("#dailyTable").bind( 'refresh-options.bs.table', function (options) {
-      taskInterface.nextDailyRecord(0,0);
+        if ( taskInterface.consolidatedProjSummary.length == 0 )
+        {
+          taskInterface.nextDailyRecordWithProj(0,0);
+        }
     });
 
     $("#summaryTable").bind( 'refresh-options.bs.table', function (options) {
@@ -349,7 +352,6 @@ var taskInterface = {
           taskInterface.nextRecord(0,0);
         }
     });
-
     $("#summaryTable").bind( 'column-switch.bs.table', function (e, field, checked) {
         if ( taskInterface.consolidatedProjSummary.length == 0 )
         {
@@ -530,13 +532,13 @@ var taskInterface = {
           taskInterface.dailyProjectSummary.push({
               taskDate: results.rows.item(0).startDate,
               duration: taskInterface.dailySummaryRows[0].duration,
-              dailySumByProject: detailsData
+              details: detailsData
           });
           
           taskInterface.dailyProjectSummaryCopy.push({
               taskDate: results.rows.item(0).startDate,
               duration: taskInterface.dailySummaryRows[0].duration,
-              dailySumByProject: detailsData
+              details: detailsData
           });
           taskInterface.dailySummaryRows.shift();
           $('.icon-plus').css('color','green');
@@ -554,6 +556,7 @@ var taskInterface = {
       else
       {
         $('#dailyTable').bootstrapTable('load', taskInterface.dailyProjectSummary );
+        taskInterface.nextDailyRecord(0,0);
       }
   }, 
 
@@ -602,14 +605,22 @@ var taskInterface = {
         if (len > 0) {
           for (i = 0; i < len; i++) {
             var task = results.rows.item(i);
+
+            var html = [];
+            html.push('<p>Click &nbsp' + '<span class="glyphicon glyphicon-refresh"></span>' + ' button to get details.</p>');
+            var taskData = "";
+            if (i == 0){
+              taskData = html.join('');
+            }
+
             taskInterface.dailySummaryRows.push({
                 taskDate: task.startDate,
-                duration: Math.round10(moment.duration(task.durationSum).asHours(), -2)
+                duration: Math.round10(moment.duration(task.durationSum).asHours(), -2),
+                details: taskData
             });
           } // for
         } // if
-        //$('#dailyTable').bootstrapTable('load', rows );
-        taskInterface.nextDailyRecordWithProj(0,0);
+        $('#dailyTable').bootstrapTable('load', taskInterface.dailySummaryRows );
       }, null); // executesql
     }); //dbtransaction
   },
