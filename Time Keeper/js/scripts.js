@@ -209,14 +209,10 @@ var taskInterface = {
       taskInterface.playHandler();
     });
     $('#newTask').keydown(function ( event ) {
-      if (event.keyCode == 13) {
-        taskInterface.playHandler();
-      }
+      taskInterface.timerToolbarKeyCodeHandler(event);
     });
     $('#newProject').keydown(function ( event ) {
-      if (event.keyCode == 13) {
-        taskInterface.playHandler();
-      }
+      taskInterface.timerToolbarKeyCodeHandler(event);
     });
 
 
@@ -801,6 +797,30 @@ var taskInterface = {
         }
       }, null, onError);
     });
+  },
+
+  timerToolbarKeyCodeHandler: function (event) {
+    if (event.keyCode == 13) {
+      db.transaction(function (tx) {
+        tx.executeSql('SELECT * FROM timeInfo WHERE running = ?', [1], function (tx, results) {
+          if (results.rows.length > 0) {
+            var task = results.rows.item(0);
+            db.transaction(function (tx) {
+              var projName = $('#newProject').val();
+              var name = $('#newTask').val();
+              tx.executeSql("UPDATE timeInfo SET project_name = ?, name = ? WHERE id = ?",
+                              [projName, name, task.ID], function (tx, results) {
+                 taskInterface.index();
+               }, onError);
+            });
+          }
+          else
+          {
+            taskInterface.playHandler(); 
+          }
+        }, null, onError);
+      });
+    }
   },
 
   //////////////////////////////////////////////////////////////////////////////
