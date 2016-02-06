@@ -336,14 +336,11 @@ var taskInterface = {
     });
 
     $(".dailyDuration").bind( "click", function( event ) {
-      taskInterface.dailySummary();
+      taskInterface.dailySummary(false);
     });
 
     $("#dailyTable").bind( 'refresh-options.bs.table', function (options) {
-        if ( taskInterface.consolidatedProjSummary.length == 0 )
-        {
-          taskInterface.nextDailyRecordWithProj(0,0);
-        }
+        taskInterface.dailySummary(true);
     });
 
     $("#summaryTable").bind( 'refresh-options.bs.table', function (options) {
@@ -560,7 +557,7 @@ var taskInterface = {
       }
   }, 
 
-  dailySummary: function () {
+  dailySummary: function (bRefresh) {
       var currentTime = new Date();
       // First Date Of the month 
       var startDateFrom = new Date(currentTime.getFullYear(),currentTime.getMonth(),1);
@@ -574,7 +571,7 @@ var taskInterface = {
         onSelect: function(dateText, inst) { 
             var dpStartDate = new moment($("#fromDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
             var dpEndDate = new moment($("#toDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
-            taskInterface.GetDailySummary(dpStartDate, dpEndDate);
+            taskInterface.GetDailySummary(dpStartDate, dpEndDate, bRefresh);
          }
       }).datepicker("setDate", startDateFrom);
 
@@ -584,22 +581,23 @@ var taskInterface = {
         onSelect: function(dateText, inst) { 
             var dpStartDate = new moment($("#fromDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
             var dpEndDate = new moment($("#toDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
-            taskInterface.GetDailySummary(dpStartDate, dpEndDate);
+            taskInterface.GetDailySummary(dpStartDate, dpEndDate, bRefresh);
          }
       }).datepicker("setDate", new Date());
 
     var dpStartDate = new moment($("#fromDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
     var dpEndDate = new moment($("#toDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
-    this.GetDailySummary(dpStartDate, dpEndDate);
+    this.GetDailySummary(dpStartDate, dpEndDate, bRefresh);
   },
 
-  GetDailySummary: function (dpStartDate, dpEndDate) {
+  GetDailySummary: function (dpStartDate, dpEndDate, bRefresh) {
     taskInterface.dailySummaryRows = [];
     taskInterface.consolidatedDailySummary = [];
     taskInterface.dailyProjectSummary = [];
     taskInterface.dailyProjectSummaryCopy = [];
     db.transaction(function (tx) {
       tx.executeSql('SELECT startDate, SUM(duration) AS durationSum FROM timeInfo WHERE startDate BETWEEN strftime("%m-%d-%Y", ?) AND strftime("%m-%d-%Y", ?) GROUP BY startDate ORDER BY startDate DESC', [dpStartDate, dpEndDate], function (tx, results) {
+        $('#dailyTable').bootstrapTable('removeAll');
         var len = results.rows.length, i;
         rows = [];
         if (len > 0) {
@@ -621,6 +619,9 @@ var taskInterface = {
           } // for
         } // if
         $('#dailyTable').bootstrapTable('load', taskInterface.dailySummaryRows );
+        if (bRefresh == true){
+          taskInterface.nextDailyRecordWithProj(0,0); 
+        }
       }, null); // executesql
     }); //dbtransaction
   },
@@ -681,7 +682,7 @@ var taskInterface = {
   index: function () {
     this.timeInfoData();
     this.SummaryByProject();
-    this.dailySummary();
+    this.dailySummary(false);
   },
 
   init: function () {
