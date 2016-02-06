@@ -343,6 +343,13 @@ var taskInterface = {
       taskInterface.nextDailyRecord(0,0);
     });
 
+    $("#summaryTable").bind( 'refresh-options.bs.table', function (options) {
+        if ( taskInterface.consolidatedProjSummary.length == 0 )
+        {
+          taskInterface.nextRecord(0,0);
+        }
+    });
+
     $("#summaryTable").bind( 'column-switch.bs.table', function (e, field, checked) {
         if ( taskInterface.consolidatedProjSummary.length == 0 )
         {
@@ -404,9 +411,17 @@ var taskInterface = {
             var task = results.rows.item(i);
             var roundedHours = Math.round10(moment.duration(task.durationSum).asHours(), -2);
             runningTotal = Math.round10(runningTotal + roundedHours, -2);
+
+            var html = [];
+            html.push('<p>Click &nbsp' + '<span class="glyphicon glyphicon-refresh"></span>' + ' button to get details.</p>');
+            var taskData = "";
+            if (i == 0){
+              taskData = html.join('');
+            }
             rows.push({
                 projectName: task.project_name,
-                duration:roundedHours
+                duration:roundedHours,
+                details: taskData
             });
             taskInterface.projSummaryRows.push({
                 projectName: task.project_name,
@@ -936,7 +951,7 @@ function detailFormatter(index, row) {
           }
       }
     }else{
-      html.push('<p>Press &nbsp' + '<span class="glyphicon glyphicon-refresh"></span>' + ' button to get details.</p>');
+      html.push('<p>Click &nbsp' + '<span class="glyphicon glyphicon-refresh"></span>' + ' button to get details.</p>');
     }
     return html.join('');
 }
