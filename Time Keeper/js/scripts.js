@@ -342,6 +342,9 @@ var taskInterface = {
     $("#dailyTable").bind( 'refresh-options.bs.table', function (options) {
         taskInterface.dailySummary(true);
     });
+    $("#dailyTable").bind( 'column-switch.bs.table', function (e, field, checked) {
+        taskInterface.dailySummary(true);
+    });
 
     $("#summaryTable").bind( 'refresh-options.bs.table', function (options) {
         if ( taskInterface.consolidatedProjSummary.length == 0 )
