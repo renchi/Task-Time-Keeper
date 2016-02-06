@@ -2,7 +2,7 @@
 	"manifest_version": 2,
 	"name": "Task tracker | Task timer",
 	"description": "Task Time Keeper",
-	"version": "1.0.4",
+	"version": "1.0.5",
 
 	"icons": { 
 		"16": "img/icon16.png",
