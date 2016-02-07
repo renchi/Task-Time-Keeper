@@ -354,6 +354,9 @@ var taskInterface = {
           taskInterface.nextRecord(0,0);
         }
     });
+    $("#table").bind( 'refresh-options.bs.table', function (options) {
+        taskInterface.refreshTimeInfoData();
+    });
   },
 
   getIdSelections: function ()  {
@@ -625,55 +628,71 @@ var taskInterface = {
     }); //dbtransaction
   },
 
+  displayTimeInfoData: function (results) {
+    rows = [];
+    var len = results.rows.length, i;
+
+    if (len > 0) {
+      for (i = 0; i < len; i++) {
+        var task = results.rows.item(i);
+        var startDateTime = new moment(new Date(task.startTime));
+        var endDateTime = new moment(new Date(task.endTime));
+
+        var endTimeDisplay = "";
+        var durationDisplay;
+        var start = new Date(task.startTime);
+        if (task.running == true) {
+          var dif = Math.floor((new Date().getTime() - start.getTime()) / 1000)
+          taskInterface.startTask(task); // start task
+
+          $('#play').html('<span class="glyphicon glyphicon-play-circle icon-danger icon-main-size rel="' + task.ID + '"></span>');
+          $('#newTask').val(task.name);
+          $('#newProject').val(task.project_name);
+
+        } else {
+          endTimeDisplay = taskInterface.getHm(new Date(task.endTime));
+          durationDisplay = moment.duration(task.duration).hours() + ":" ;
+          var minsPart = moment.duration(task.duration).minutes();
+          if (minsPart < 10 ){
+            durationDisplay = durationDisplay + "0" + minsPart;
+          }
+          else{
+            durationDisplay = durationDisplay + minsPart;
+          }
+          
+          rows.push({
+              id: task.ID,
+              taskName: task.name,
+              projectName: task.project_name,
+              date: startDateTime.format("MMM D"),
+              startStopTime: taskInterface.getHm(new Date(task.startTime)) + " - " + endTimeDisplay,
+              duration: durationDisplay,
+              running: task.running
+          });
+        }
+      } // for
+    } // if
+    $('#table').bootstrapTable('load', rows );
+  },   
+
   timeInfoData: function () {
     $('#play').html('<span class="glyphicon glyphicon-play-circle icon-success icon-main-size"></span>');
 
     db.transaction(function (tx) {
+      var dpMonthAgo = new moment().subtract(31, 'days').format('YYYY-MM-DD');
+      var dpToday = new moment().format('YYYY-MM-DD'); 
+      tx.executeSql('SELECT * FROM timeInfo WHERE startDate BETWEEN strftime("%m-%d-%Y", ?) AND strftime("%m-%d-%Y", ?) ORDER BY id DESC', [dpMonthAgo, dpToday], function (tx, results) {
+        taskInterface.displayTimeInfoData(results);
+      }, null); // executesql
+    }); //dbtransaction
+  },
+
+  refreshTimeInfoData: function () {
+    $('#play').html('<span class="glyphicon glyphicon-play-circle icon-success icon-main-size"></span>');
+
+    db.transaction(function (tx) {
       tx.executeSql('SELECT * FROM timeInfo ORDER BY startTime DESC', [], function (tx, results) {
-        rows = [];
-        var len = results.rows.length, i;
-
-        if (len > 0) {
-          for (i = 0; i < len; i++) {
-            var task = results.rows.item(i);
-            var startDateTime = new moment(new Date(task.startTime));
-            var endDateTime = new moment(new Date(task.endTime));
-    
-            var endTimeDisplay = "";
-            var durationDisplay;
-            var start = new Date(task.startTime);
-            if (task.running == true) {
-              var dif = Math.floor((new Date().getTime() - start.getTime()) / 1000)
-              taskInterface.startTask(task); // start task
-
-              $('#play').html('<span class="glyphicon glyphicon-play-circle icon-danger icon-main-size rel="' + task.ID + '"></span>');
-              $('#newTask').val(task.name);
-              $('#newProject').val(task.project_name);
-
-            } else {
-              endTimeDisplay = taskInterface.getHm(new Date(task.endTime));
-              durationDisplay = moment.duration(task.duration).hours() + ":" ;
-              var minsPart = moment.duration(task.duration).minutes();
-              if (minsPart < 10 ){
-                durationDisplay = durationDisplay + "0" + minsPart;
-              }
-              else{
-                durationDisplay = durationDisplay + minsPart;
-              }
-              
-              rows.push({
-                  id: task.ID,
-                  taskName: task.name,
-                  projectName: task.project_name,
-                  date: startDateTime.format("MMM D"),
-                  startStopTime: taskInterface.getHm(new Date(task.startTime)) + " - " + endTimeDisplay,
-                  duration: durationDisplay,
-                  running: task.running
-              });
-            }
-          } // for
-        } // if
-        $('#table').bootstrapTable('load', rows );
+        taskInterface.displayTimeInfoData(results);
       }, null); // executesql
     }); //dbtransaction
   },
