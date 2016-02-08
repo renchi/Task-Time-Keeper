@@ -266,8 +266,6 @@ var taskInterface = {
       }
     });
 
-
-    
     // export all tasks
     $("#exportEntries").bind( "click", function( event ) {
       var currentTime = new Date();
@@ -348,12 +346,12 @@ var taskInterface = {
           taskInterface.nextRecord(0,0);
         }
     });
-    $("#summaryTable").bind( 'column-switch.bs.table', function (e, field, checked) {
-        if ( taskInterface.consolidatedProjSummary.length == 0 )
-        {
-          taskInterface.nextRecord(0,0);
-        }
-    });
+    // $("#summaryTable").bind( 'column-switch.bs.table', function (e, field, checked) {
+    //     if ( taskInterface.consolidatedProjSummary.length == 0 )
+    //     {
+    //       taskInterface.nextRecord(0,0);
+    //     }
+    // });
     $("#table").bind( 'refresh-options.bs.table', function (options) {
         taskInterface.refreshTimeInfoData();
     });
@@ -414,11 +412,9 @@ var taskInterface = {
             runningTotal = Math.round10(runningTotal + roundedHours, -2);
 
             var html = [];
-            html.push('<p>Click &nbsp' + '<span class="glyphicon glyphicon-refresh"></span>' + ' button to get details.</p>');
+            html.push('<a class="summary ml10" href="javascript:void(0)" title="Summary"><i class="glyphicon glyphicon-screenshot icon-primary"></i></a>');
             var taskData = "";
-            if (i == 0){
-              taskData = html.join('');
-            }
+            taskData = html.join('');
             rows.push({
                 projectName: task.project_name,
                 duration:roundedHours,
@@ -1069,5 +1065,33 @@ window.operateEvents = {
           }
         }, null);
       });
+  },
+  'click .summary': function (e, value, row, index) {
+    db.transaction(function (tx) {
+      var dpStartDate = new moment($("#from").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+      var dpEndDate = new moment($("#to").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+      tx.executeSql('SELECT DISTINCT NAME, project_name, SUM(duration) AS durationSum  FROM timeInfo WHERE project_name = ? AND startDate BETWEEN strftime("%m-%d-%Y", ?) AND strftime("%m-%d-%Y", ?) GROUP BY name', 
+        [row.projectName, dpStartDate, dpEndDate], function (tx, results) {
+          if (results.rows.length > 0) 
+          {
+            var len = results.rows.length;        
+            if (len > 0) 
+            {  
+              var detailsData = "";
+              for (var i = 0; i < len; i++) 
+              {
+                var task = results.rows.item(i);
+                var roundedHours = Math.round10(moment.duration(task.durationSum).asHours(), -2);
+                detailsData = detailsData + '<p>' + roundedHours + " H = " + task.name + "</p>";
+              }
+            }
+            var myProjSummary = {
+            projectName: row.projectName,
+            duration:row.duration,
+            details: detailsData};
+            $("#summaryTable").bootstrapTable('updateRow', {index: index, row: myProjSummary});
+          } 
+        }, null); 
+    }); //dbtransaction   
   }
 };
