@@ -336,22 +336,12 @@ var taskInterface = {
     $("#dailyTable").bind( 'refresh-options.bs.table', function (options) {
         taskInterface.dailySummary(true);
     });
-    $("#dailyTable").bind( 'column-switch.bs.table', function (e, field, checked) {
-        taskInterface.dailySummary(true);
-    });
-
     $("#summaryTable").bind( 'refresh-options.bs.table', function (options) {
         if ( taskInterface.consolidatedProjSummary.length == 0 )
         {
           taskInterface.nextRecord(0,0);
         }
     });
-    // $("#summaryTable").bind( 'column-switch.bs.table', function (e, field, checked) {
-    //     if ( taskInterface.consolidatedProjSummary.length == 0 )
-    //     {
-    //       taskInterface.nextRecord(0,0);
-    //     }
-    // });
     $("#table").bind( 'refresh-options.bs.table', function (options) {
         taskInterface.refreshTimeInfoData();
     });
@@ -443,10 +433,6 @@ var taskInterface = {
           {
             var task = results.rows.item(i);
             var roundedHours = Math.round10(moment.duration(task.durationSum).asHours(), -2);
-            //detailsData = detailsData + task.name +" = " + roundedHours + " H";
-            // if ( i < (len-1) ){
-            //   detailsData = detailsData + ";  " ;
-            // }
             detailsData = detailsData + '<p>' + roundedHours + " H = " + task.name + "</p>";
           }
 
@@ -603,11 +589,9 @@ var taskInterface = {
             var task = results.rows.item(i);
 
             var html = [];
-            html.push('<p>Click &nbsp' + '<span class="glyphicon glyphicon-refresh"></span>' + ' button to get details.</p>');
+            html.push('<a class="dailyDetails ml10" href="javascript:void(0)" title="Daily Details"><i class="glyphicon glyphicon-screenshot icon-success"></i></a>');
             var taskData = "";
-            if (i == 0){
-              taskData = html.join('');
-            }
+            taskData = html.join('');
 
             taskInterface.dailySummaryRows.push({
                 taskDate: task.startDate,
@@ -1082,7 +1066,7 @@ window.operateEvents = {
               {
                 var task = results.rows.item(i);
                 var roundedHours = Math.round10(moment.duration(task.durationSum).asHours(), -2);
-                detailsData = detailsData + '<p>' + roundedHours + " H = " + task.name + "</p>";
+                detailsData = detailsData + '<p align="left">' + roundedHours + " H = " + task.name + "</p>";
               }
             }
             var myProjSummary = {
@@ -1090,6 +1074,30 @@ window.operateEvents = {
             duration:row.duration,
             details: detailsData};
             $("#summaryTable").bootstrapTable('updateRow', {index: index, row: myProjSummary});
+          } 
+        }, null); 
+    }); //dbtransaction   
+  },
+  'click .dailyDetails': function (e, value, row, index) {
+    db.transaction(function (tx) {
+      tx.executeSql('SELECT DISTINCT project_name, name, startDate, SUM(duration) AS durationSum FROM timeInfo WHERE startDate = ? GROUP BY project_name', 
+        [row.taskDate], function (tx, results) {
+          var len = results.rows.length;   
+          if (len > 0) 
+          {
+            var detailsData = "";
+            for (var i = 0; i < len; i++) 
+            {
+              var task = results.rows.item(i);
+              var roundedHours = Math.round10(moment.duration(task.durationSum).asHours(), -2);
+              detailsData = detailsData + '<p align="left">' + roundedHours + " H = " + task.project_name + "</p>";
+            } 
+
+            var myDailySummary = {
+            taskDate: row.taskDate,
+            duration:row.duration,
+            details: detailsData};
+            $("#dailyTable").bootstrapTable('updateRow', {index: index, row: myDailySummary});
           } 
         }, null); 
     }); //dbtransaction   
