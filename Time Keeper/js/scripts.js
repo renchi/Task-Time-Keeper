@@ -1066,7 +1066,7 @@ window.operateEvents = {
               {
                 var task = results.rows.item(i);
                 var roundedHours = Math.round10(moment.duration(task.durationSum).asHours(), -2);
-                detailsData = detailsData + '<p align="left">' + roundedHours + " H = " + task.name + "</p>";
+                detailsData = detailsData + '<p align="center">' + roundedHours + " H = " + task.name + "</p>";
               }
             }
             var myProjSummary = {
@@ -1090,7 +1090,7 @@ window.operateEvents = {
             {
               var task = results.rows.item(i);
               var roundedHours = Math.round10(moment.duration(task.durationSum).asHours(), -2);
-              detailsData = detailsData + '<p align="left">' + roundedHours + " H = " + task.project_name + "</p>";
+              detailsData = detailsData + '<p align="center">' + roundedHours + " H = " + task.project_name + "</p>";
             } 
 
             var myDailySummary = {
