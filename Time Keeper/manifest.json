@@ -3,6 +3,7 @@
 	"name": "Task tracker | Task timer",
 	"description": "Task Time Keeper",
 	"version": "1.0.5",
+	"offline_enabled": true,
 
 	"icons": { 
 		"16": "img/icon16.png",
