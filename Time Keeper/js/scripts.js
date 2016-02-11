@@ -661,7 +661,7 @@ var taskInterface = {
     db.transaction(function (tx) {
       var dpMonthAgo = new moment().subtract(31, 'days').format('YYYY-MM-DD');
       var dpToday = new moment().format('YYYY-MM-DD'); 
-      tx.executeSql('SELECT * FROM timeInfo WHERE startDate BETWEEN strftime("%m-%d-%Y", ?) AND strftime("%m-%d-%Y", ?) ORDER BY id DESC', [dpMonthAgo, dpToday], function (tx, results) {
+      tx.executeSql('SELECT * FROM timeInfo WHERE startDate BETWEEN strftime("%m-%d-%Y", ?) AND strftime("%m-%d-%Y", ?) ORDER BY startTime DESC', [dpMonthAgo, dpToday], function (tx, results) {
         taskInterface.displayTimeInfoData(results);
       }, null); // executesql
     }); //dbtransaction
