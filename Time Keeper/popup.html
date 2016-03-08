@@ -14,7 +14,8 @@
         <link href="css/font-awesome.min.css" rel="stylesheet" media="screen">    
         <link rel="stylesheet" href="css/styles.css" />
         <link href="css/bootstrap-table.min.css" rel="stylesheet" media="screen">   
-        <link href="css/jquery-ui.min.css" rel="stylesheet" media="screen">   
+        <link href="css/jquery-ui.min.css" rel="stylesheet" media="screen">  
+        <link href="css/nv.d3.min.css" rel="stylesheet" media="screen"> 
     </head>
     
     <body>
@@ -45,6 +46,7 @@
                         </ul>
                         </a>
                     </li>
+                    <li><a href="#section4">Charts</a></li>
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Actions <b class="caret"></b>
                         <ul class="dropdown-menu">
@@ -241,6 +243,31 @@
     </table>
 </section>
 
+<section class="container-fluid" id="section4">
+    <div class="v-center">
+        <h2 class="text-center">Charts</h2>
+        <br>
+    </div>
+
+    <div id="nav-wrapper">
+      <div id="bar-chart-button" class="nav-button">Daily Summary</div>
+      <div id="pie-chart-button" class="nav-button">Project Summary</div>
+    </div>
+    <div id="main-content">
+        <div id="bar-chart-content" style="display:none;">
+            <div id="bar-chart">
+              <svg style='height:400px'> </svg>
+            </div>
+        </div>
+        <div id="pie-chart-content" style="display:none;">
+        <h2>Your time series for this</h2>
+        <div id="pie-chart">
+          <svg></svg>
+        </div>
+    </div>
+</section>
+
+
 <footer id="footer">
  
 </footer>
@@ -418,9 +445,13 @@
     <script type="text/javascript" src="js/bootstrap.min.js"></script>   
     <script type="text/javascript" src="js/moment.min.js"></script>   
     <script type="text/javascript" src="js/tableExport.js"></script>
-    <script type="text/javascript" src="js/scripts.js"></script>
-    <script type="text/javascript" src="js/init.js"></script>
     <script type="text/javascript" src="js/bootstrap-table.min.js"></script>  
     <script type="text/javascript" src="js/bootstrap-table-export.min.js"></script>  
+    <script type="text/javascript" src="js/constants.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/nv.d3.min.js"></script>
+    <script type="text/javascript" src="js/eventControl.js"></script>
+    <script type="text/javascript" src="js/scripts.js"></script>
+    <script type="text/javascript" src="js/init.js"></script>
     </body>
 </html>

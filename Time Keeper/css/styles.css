@@ -157,6 +157,8 @@ section {
 }
   
 #section4 {
+  padding-top:10px;  
+  padding-bottom:10px;
 	background-color: #f6f6f6;
 	color:#444;
 }
@@ -211,4 +213,47 @@ footer .nav>li>a {
 footer .nav>li>a:hover {
     background-color:transparent;
 	color:#fff;
+}
+
+/* Styles for charts */
+#main-content {
+  border: 1px solid black;
+  margin-top: -2px;
+  width: 670px;
+  height: 420px;
+  padding: 5px;
+  background-color: #FCFCFC;
+}
+
+.nav-button {
+  border: 1px solid black;
+  margin-bottom: 1px;
+  padding: 5px;
+  cursor: pointer;
+}
+#nav-wrapper {
+  overflow: hidden;
+}
+
+svg {
+  width: 600px; 
+  height: 400px;
+}
+
+#pie-chart-button {
+  width: 49%;
+  float: right;
+}
+
+/*bar-chart tab*/
+#bar-chart-button {
+  width: 49%;
+  float: left;
+  overflow: hidden; /* if you don't want #second to wrap below #first */
+  border-bottom-color: #FCFCFC;
+  background-color: #FCFCFC;
+}
+#bar-chart-content {
+  width: auto;
+  margin:0px auto;
 }
