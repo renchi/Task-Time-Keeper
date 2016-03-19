@@ -46,7 +46,7 @@
                         </ul>
                         </a>
                     </li>
-                    <li><a href="#section4">Charts</a></li>
+                    <li><a id="charts" href="#section4">Charts</a></li>
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Actions <b class="caret"></b>
                         <ul class="dropdown-menu">
@@ -244,9 +244,36 @@
 </section>
 
 <section class="container-fluid" id="section4">
-    <div class="v-center">
-        <h2 class="text-center">Charts</h2>
-        <br>
+    <div id="chartToolbar">
+        <div class="form-inline" role="form">   
+             <div class="form-group">       
+                <div class="input-group">
+                    <label class="input-sm" type="text">From</label> 
+                </div>
+            </div>                    
+            <div class="form-group">
+                <div class="input-group">
+                    <input type="text" id="fromChart" name="from" class="form-control input-sm" style="width:90px;">               
+                </div>
+            </div>
+             <div class="form-group">       
+                <div class="input-group">
+                    <label class="input-sm" type="text">To</label> 
+                </div>
+            </div>  
+             <div class="form-group">       
+                <div class="input-group">
+                     <input type="text" id="toChart" name="to" class="form-control input-sm" style="width:90px;">         
+                </div>
+            </div>
+
+<!--             <div class="columns columns-right btn-group pull-right">
+                <div class="form-group">       
+                    <button class="btn btn-default btn-sm" type="button" id="chartRefresh" title="refresh"><i class="glyphicon glyphicon-refresh icon-refresh"></i></button>
+                </div>
+            </div> -->
+
+        </div>
     </div>
 
     <div id="nav-wrapper">
@@ -260,7 +287,7 @@
             </div>
         </div>
         <div id="pie-chart-content" style="display:none;">
-        <h2>Your time series for this</h2>
+        <h2>Chart for this coming soon..</h2>
         <div id="pie-chart">
           <svg></svg>
         </div>
@@ -443,15 +470,14 @@
     <script type="text/javascript" src="js/ga.js"></script>
     <script type="text/javascript" src="js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="js/bootstrap.min.js"></script>   
-    <script type="text/javascript" src="js/moment.min.js"></script>   
+    <script type="text/javascript" src="js/moment.min.js"></script>  
+    <script type="text/javascript" src="js/moment-range.min.js"></script>  
     <script type="text/javascript" src="js/tableExport.js"></script>
     <script type="text/javascript" src="js/bootstrap-table.min.js"></script>  
     <script type="text/javascript" src="js/bootstrap-table-export.min.js"></script>  
     <script type="text/javascript" src="js/constants.js"></script>
     <script type="text/javascript" src="js/d3.min.js"></script>
     <script type="text/javascript" src="js/nv.d3.min.js"></script>
-    <script type="text/javascript" src="js/eventControl.js"></script>
     <script type="text/javascript" src="js/scripts.js"></script>
-    <script type="text/javascript" src="js/init.js"></script>
     </body>
 </html>

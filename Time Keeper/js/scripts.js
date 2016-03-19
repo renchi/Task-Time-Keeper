@@ -354,33 +354,6 @@ var taskInterface = {
   },
 
   SummaryByProject: function () {
-      var currentTime = new Date();
-      // First Date Of the month 
-      var startDateFrom = new Date(currentTime.getFullYear(),currentTime.getMonth(),1);
-      // Last Date Of the Month 
-      //var startDateTo = new Date(currentTime.getFullYear(),currentTime.getMonth() +1,0);
-       
-      $("#from").datepicker({
-        defaultDate: startDateFrom,
-        changeMonth: true,
-        changeYear: true,
-        onSelect: function(dateText, inst) { 
-            var dpStartDate = new moment($("#from").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
-            var dpEndDate = new moment($("#to").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
-            taskInterface.GetSummaryByProject(dpStartDate, dpEndDate);
-         }
-      }).datepicker("setDate", startDateFrom);
-
-      $( "#to" ).datepicker({
-        changeMonth: true,
-        changeYear: true,
-        onSelect: function(dateText, inst) { 
-            var dpStartDate = new moment($("#from").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
-            var dpEndDate = new moment($("#to").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
-            taskInterface.GetSummaryByProject(dpStartDate, dpEndDate);
-         }
-      }).datepicker("setDate", new Date());
-
     var dpStartDate = new moment($("#from").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
     var dpEndDate = new moment($("#to").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
     this.GetSummaryByProject(dpStartDate, dpEndDate);
@@ -542,33 +515,6 @@ var taskInterface = {
   }, 
 
   dailySummary: function (bRefresh) {
-      var currentTime = new Date();
-      // First Date Of the month 
-      var startDateFrom = new Date(currentTime.getFullYear(),currentTime.getMonth(),1);
-      // Last Date Of the Month 
-      //var startDateTo = new Date(currentTime.getFullYear(),currentTime.getMonth() +1,0);
-       
-      $("#fromDaily").datepicker({
-        defaultDate: startDateFrom,
-        changeMonth: true,
-        changeYear: true,
-        onSelect: function(dateText, inst) { 
-            var dpStartDate = new moment($("#fromDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
-            var dpEndDate = new moment($("#toDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
-            taskInterface.GetDailySummary(dpStartDate, dpEndDate, bRefresh);
-         }
-      }).datepicker("setDate", startDateFrom);
-
-      $( "#toDaily" ).datepicker({
-        changeMonth: true,
-        changeYear: true,
-        onSelect: function(dateText, inst) { 
-            var dpStartDate = new moment($("#fromDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
-            var dpEndDate = new moment($("#toDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
-            taskInterface.GetDailySummary(dpStartDate, dpEndDate, bRefresh);
-         }
-      }).datepicker("setDate", new Date());
-
     var dpStartDate = new moment($("#fromDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
     var dpEndDate = new moment($("#toDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
     this.GetDailySummary(dpStartDate, dpEndDate, bRefresh);
@@ -681,6 +627,7 @@ var taskInterface = {
     this.timeInfoData();
     this.SummaryByProject();
     this.dailySummary(false);
+    getChartData();
   },
 
   init: function () {
@@ -1103,3 +1050,365 @@ window.operateEvents = {
     }); //dbtransaction   
   }
 };
+
+
+
+/**
+ * Chart user interface Javascript
+ */
+ /**
+  * File containing event and flow control logic. 
+  */
+
+var addListeners = function() {
+  /**
+   * addListeners()
+   * Add listeners for page events. 
+   */
+  addTabChangeListeners();
+};
+
+var addTabChangeListeners = function(){
+  /**
+   * addTabChangeListeners()
+   * Add listeners to the tab buttons, enabling a user to switch between them.
+   */
+  var barChartButton = document.getElementById(BAR_CHART_BUTTON_ID);
+  var pieChartButton = document.getElementById(PIE_CHART_BUTTON_ID);
+
+  barChartButton.addEventListener('click', function() {
+    showHiddenContent(ACTIVE_TAB, BAR_CHART_CONTENT_ID,
+                      barChartButton, ACTIVE_BUTTON);
+  });
+  pieChartButton.addEventListener('click', function() {
+    showHiddenContent(ACTIVE_TAB, PIE_CHART_CONTENT_ID,
+                      pieChartButton, ACTIVE_BUTTON);
+  });
+
+  var displayStyle = 'block';
+  currentButton = document.getElementById(BAR_CHART_BUTTON_ID);
+  var toShow = document.getElementById(BAR_CHART_CONTENT_ID);
+  toShow.style.display = displayStyle;
+  currentButton.style.borderBottomColor = ACTIVE_BACKGROUND_COLOR;
+  currentButton.style.backgroundColor = ACTIVE_BACKGROUND_COLOR;
+
+};
+
+var clearCurrentContents = function(targetNode) {
+  /**
+   * clearCurrentContents()
+   * Clears the current contents of a provided node.
+   * @param {element} targetNode A DOM node from which its children will be 
+   *     cleared.
+   */
+  var node = document.getElementById(targetNode);
+  if (node) {
+    while (node.firstChild) {
+      node.removeChild(node.firstChild);
+    }
+  }
+};
+
+
+var showHiddenContent = function(currentContent,
+                                 targetContent,
+                                 callingButton,
+                                 currentButtonId) {
+  /**
+   * showHiddenContent()
+   * Hides currently displayed content and shows another set of content.
+   * @param {string} currentContent A string containing the ID of the content 
+   *     currently displayed.
+   * @param {string} targetContent A string containing the ID of the content 
+   *     that should be displayed.
+   * @param {element} callingButton A DOM element containing the object that was
+   *     clicked and caused the event to fire.
+   * @param {string} currentButtonId A string containing the id of the currently
+   *     active button.
+   */
+  var displayStyle = 'block';
+  currentButton = document.getElementById(ACTIVE_BUTTON);
+
+  hideContent(currentContent, currentButton);
+
+  var toShow = document.getElementById(targetContent);
+  toShow.style.display = displayStyle;
+  callingButton.style.borderBottomColor = ACTIVE_BACKGROUND_COLOR;
+  callingButton.style.backgroundColor = ACTIVE_BACKGROUND_COLOR;
+
+  // set up globals to track the state of the page
+  ACTIVE_TAB = targetContent;
+  // the id of the button that was clicked on is the new active button
+  ACTIVE_BUTTON = event.target.id;
+};
+
+var hideContent = function(currentContent, currentButton) {
+  /**
+   * hideContent()
+   * Hides a given content node, and updates its active button style.
+   * @param {string} currentContent A string representing the ID of the current
+   *     content displayed.
+   * @param {element} currentButton A DOM element representing the currently
+   *     active button.
+   */
+  var toHide = document.getElementById(currentContent);
+  toHide.style.display = 'none';
+  currentButton.style.borderBottomColor = BORDER_COLOR;
+  currentButton.style.backgroundColor = DORMANT_BACKGROUND_COLOR;
+};
+
+var getChartData = function() {
+ chartProjects: new Array;
+ chartProjects = [];
+  getChartProjData();
+};
+
+var nextProjDailyTime = function (tx, results) {
+  if ( results != 0)
+  {
+    var len = results.rows.length;        
+    if (len > 0) 
+    { 
+      var valuesArray = [];
+      for (var i = 0; i < len; i++) 
+      {
+        var task = results.rows.item(i);
+        var roundedHours = Math.round10(moment.duration(task.durationSum).asHours(), -2);
+        valuesArray.push({x:task.startDate,y:roundedHours});
+      }
+      var projName = results.rows.item(0).project_name;
+      dailyChartData.push({values:valuesArray,key:projName});
+      chartProjects.shift();
+    } // if
+  }
+
+  if (chartProjects.length > 0) 
+  {
+    db.transaction(function (tx) {
+      var row = chartProjects[0];
+      tx.executeSql('SELECT project_name,startDate, SUM(duration) AS durationSum FROM timeInfo WHERE project_name = ? AND startDate BETWEEN strftime("%m-%d-%Y", ?) AND strftime("%m-%d-%Y", ?) GROUP BY startDate ORDER BY startDate ASC', 
+        [row.project, row.startDate, row.endDate], nextProjDailyTime, null); 
+    }); //dbtransaction            
+  } 
+  else
+  {
+    // call bar chart
+    createBarChart();
+  }
+};
+
+var getChartProjData = function() {
+  chartProjects: new Array;
+  chartProjects = [];
+  dailyChartData: new Array;
+  dailyChartData = [];
+
+  db.transaction(function (tx) {
+    var dpStartDate = new moment($("#fromChart").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+    var dpEndDate = new moment($("#toChart").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+    tx.executeSql('SELECT project_name FROM timeInfo WHERE startDate BETWEEN strftime("%m-%d-%Y", ?) AND strftime("%m-%d-%Y", ?) GROUP BY project_name', [dpStartDate, dpEndDate], function (tx, results) {
+      var len = results.rows.length, i;
+      if (len > 0) {
+        for (i = 0; i < len; i++) {
+          var task = results.rows.item(i);
+          chartProjects.push({
+              project: task.project_name,
+              startDate: dpStartDate,
+              endDate: dpEndDate
+          });
+        } // for
+      } // if
+
+      nextProjDailyTime(0,0); 
+    }, null); // executesql
+  }); //dbtransaction
+
+ };
+
+
+var createBarChart = function(barChartData) {
+  //Generate some nice data.
+  function exampleData() {
+    var data = [];
+    var totalProj = dailyChartData.length
+    var valuesArray = new Array(totalProj);
+    for( var i = 0 ; i < totalProj; i++ ) 
+    {
+      valuesArray[i] = new Array(); 
+    }
+
+    var dpStartDate = new moment($("#fromChart").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+    var dpEndDate = new moment($("#toChart").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+    var range1 = moment.range(dpStartDate, dpEndDate);
+
+    range1.by('days', function(moment) {
+      var iteratedDate =moment.format('MM-DD-YYYY');
+      var filtered = 0;
+
+      // check if any project has this date
+      for( var i = 0, len = dailyChartData.length; i < len; i++ ) {
+        function hasData(element, index, array) {
+          return (element.x == iteratedDate);
+        }
+        filtered  = dailyChartData[i].values.filter(hasData);
+        if (filtered.length > 0){
+          break;
+        }
+      }
+
+      // update the value for that date
+      if (filtered.length > 0){
+        // update values for all
+        var y = filtered; 
+
+        for( var i = 0, projCnt = dailyChartData.length; i < projCnt; i++ ) 
+        {
+
+          for( var j = 0; j < dailyChartData[i].values.length; j++ )
+          {
+            var projDate = dailyChartData[i].values[j].x;
+            if( projDate == iteratedDate ) 
+            {
+              valuesArray[i].push({x:iteratedDate,y:dailyChartData[i].values[j].y}); 
+              break;
+            }
+            else if (projDate > iteratedDate)
+            {
+              valuesArray[i].push({x:iteratedDate,y:0}); 
+              break;
+            }
+            else if (j == (dailyChartData[i].values.length -1) ) // no data found 
+            {
+              valuesArray[i].push({x:iteratedDate,y:0}); 
+            }
+          }
+        }
+      }
+    });  
+
+    for( var i = 0 ; i < totalProj; i++ ) 
+    {
+      data.push({values:valuesArray[i],key:dailyChartData[i].key}); 
+    }
+    return data;
+  }
+
+  //var data = barChartData;
+  nv.addGraph(function() {
+      var chart = nv.models.multiBarChart()
+        //.transitionDuration(350)
+        .reduceXTicks(true)   //If 'false', every single x-axis tick label will be rendered.
+        .rotateLabels(0)      //Angle to rotate x-axis labels.
+        .showControls(true)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+        .groupSpacing(0.1)    //Distance between each group of bars.
+      ;
+
+      chart.xAxis.tickFormat(function(d) {
+          return d3.time.format('%x')(new Date(d));
+      });
+
+      //chart.yAxis.tickFormat(d3.format(',d'));
+      chart.yAxis.tickFormat(d3.format('.02f'));
+
+      chart.multibar.stacked(true); // default to stacked
+      //chart.showControls(false); // don't show controls
+      chart.xAxis
+          .orient("bottom")
+          .tickFormat(function(d) {
+              return d3.time.format('%d-%b')(new Date(d));
+          })
+          .rotateLabels(-45);
+
+      chart.yAxis
+          .axisLabel('Work time')
+          .orient("left")
+          .tickFormat(d3.format('d'));
+
+
+      d3.select('#bar-chart svg')
+          .datum(exampleData())
+          .call(chart);
+
+      nv.utils.windowResize(chart.update);
+
+      return chart;
+  });
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+  var currentTime = new Date();
+  // First Date Of the month 
+  var startDateFrom = new Date(currentTime.getFullYear(),currentTime.getMonth(),1);
+  // Last Date Of the Month 
+  
+  // Summary By Project
+  $("#from").datepicker({
+    defaultDate: startDateFrom,
+    changeMonth: true,
+    changeYear: true,
+    onSelect: function(dateText, inst) { 
+        var dpStartDate = new moment($("#from").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+        var dpEndDate = new moment($("#to").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+        taskInterface.GetSummaryByProject(dpStartDate, dpEndDate);
+     }
+  }).datepicker("setDate", startDateFrom);
+
+  $( "#to" ).datepicker({
+    changeMonth: true,
+    changeYear: true,
+    onSelect: function(dateText, inst) { 
+        var dpStartDate = new moment($("#from").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+        var dpEndDate = new moment($("#to").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+        taskInterface.GetSummaryByProject(dpStartDate, dpEndDate);
+     }
+  }).datepicker("setDate", new Date());
+
+
+  // Daily Summary
+  $("#fromDaily").datepicker({
+    defaultDate: startDateFrom,
+    changeMonth: true,
+    changeYear: true,
+    onSelect: function(dateText, inst) { 
+        var dpStartDate = new moment($("#fromDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+        var dpEndDate = new moment($("#toDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+        taskInterface.GetDailySummary(dpStartDate, dpEndDate, false);
+     }
+  }).datepicker("setDate", startDateFrom);
+
+  $( "#toDaily" ).datepicker({
+    changeMonth: true,
+    changeYear: true,
+    onSelect: function(dateText, inst) { 
+        var dpStartDate = new moment($("#fromDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+        var dpEndDate = new moment($("#toDaily").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+        taskInterface.GetDailySummary(dpStartDate, dpEndDate, false);
+     }
+  }).datepicker("setDate", new Date());
+
+
+  // Charts
+  $("#fromChart").datepicker({
+    defaultDate: startDateFrom,
+    changeMonth: true,
+    changeYear: true,
+    onSelect: function(dateText, inst) { 
+        getChartProjData();
+     }
+  }).datepicker("setDate", startDateFrom);
+
+  $( "#toChart" ).datepicker({
+    changeMonth: true,
+    changeYear: true,
+    onSelect: function(dateText, inst) { 
+        getChartProjData();
+     }
+  }).datepicker("setDate", new Date());
+
+  taskInterface.init();
+  addListeners();
+});
+
+
+
+
