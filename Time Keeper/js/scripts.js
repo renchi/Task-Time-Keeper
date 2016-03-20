@@ -627,7 +627,7 @@ var taskInterface = {
     this.timeInfoData();
     this.SummaryByProject();
     this.dailySummary(false);
-    getChartData();
+    displayBarChart();
   },
 
   init: function () {
@@ -1140,6 +1140,11 @@ var showHiddenContent = function(currentContent,
   ACTIVE_TAB = targetContent;
   // the id of the button that was clicked on is the new active button
   ACTIVE_BUTTON = event.target.id;
+
+  if (currentButtonId == BAR_CHART_BUTTON_ID)
+  {
+    displayPieChart();
+  }
 };
 
 var hideContent = function(currentContent, currentButton) {
@@ -1157,10 +1162,31 @@ var hideContent = function(currentContent, currentButton) {
   currentButton.style.backgroundColor = DORMANT_BACKGROUND_COLOR;
 };
 
-var getChartData = function() {
+var displayBarChart = function() {
  chartProjects: new Array;
  chartProjects = [];
-  getChartProjData();
+ getBarChartProjData();
+};
+
+var displayPieChart = function() {
+  db.transaction(function (tx) {
+    pieChartProjectData: new Array;
+    pieChartProjectData = [];
+    var dpStartDate = new moment($("#fromChart").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+    var dpEndDate = new moment($("#toChart").datepicker( 'getDate' )).format('YYYY-MM-DD'); 
+    tx.executeSql('SELECT project_name, SUM(duration) AS durationSum FROM timeInfo WHERE startDate BETWEEN strftime("%m-%d-%Y", ?) AND strftime("%m-%d-%Y", ?) GROUP BY project_name', [dpStartDate, dpEndDate], function (tx, results) {
+      var len = results.rows.length, i;
+      if (len > 0) {
+        for (i = 0; i < len; i++) {
+          var task = results.rows.item(i);
+          var roundedHours = Math.round10(moment.duration(task.durationSum).asHours(), -2);
+          pieChartProjectData.push({label:task.project_name,value:roundedHours});
+        } // fored
+      } // if
+      createPieChart();
+    }, null); // executesql
+  }); //dbtransaction
+
 };
 
 var nextProjDailyTime = function (tx, results) {
@@ -1197,7 +1223,7 @@ var nextProjDailyTime = function (tx, results) {
   }
 };
 
-var getChartProjData = function() {
+var getBarChartProjData = function() {
   chartProjects: new Array;
   chartProjects = [];
   dailyChartData: new Array;
@@ -1228,7 +1254,7 @@ var getChartProjData = function() {
 
 var createBarChart = function(barChartData) {
   //Generate some nice data.
-  function exampleData() {
+  function finalBarChartData() {
     var data = [];
     var totalProj = dailyChartData.length
     var valuesArray = new Array(totalProj);
@@ -1326,7 +1352,7 @@ var createBarChart = function(barChartData) {
 
 
       d3.select('#bar-chart svg')
-          .datum(exampleData())
+          .datum(finalBarChartData())
           .call(chart);
 
       nv.utils.windowResize(chart.update);
@@ -1334,6 +1360,29 @@ var createBarChart = function(barChartData) {
       return chart;
   });
 };
+
+var createPieChart = function(barChartData) {
+  nv.addGraph(function() {
+    var chart = nv.models.pieChart()
+        .x(function(d) { return d.label })
+        .y(function(d) { return d.value })
+        .showLabels(true)     //Display pie labels
+        .labelThreshold(.05)  //Configure the minimum slice size for labels to show up
+        .labelType("percent") //Configure what type of data to show in the label. Can be "key", "value" or "percent"
+        .donut(true)          //Turn on Donut mode. Makes pie chart look tasty!
+        .donutRatio(0.35)     //Configure how big you want the donut hole size to be.
+        ;
+
+      d3.select("#pie-chart svg")
+          .datum(pieChartProjectData)
+          .transition().duration(350)
+          .call(chart);
+
+    return chart;
+  });
+
+};
+
 
 document.addEventListener('DOMContentLoaded', function () {
   var currentTime = new Date();
@@ -1393,7 +1442,7 @@ document.addEventListener('DOMContentLoaded', function () {
     changeMonth: true,
     changeYear: true,
     onSelect: function(dateText, inst) { 
-        getChartProjData();
+        getBarChartProjData();
      }
   }).datepicker("setDate", startDateFrom);
 
@@ -1401,7 +1450,7 @@ document.addEventListener('DOMContentLoaded', function () {
     changeMonth: true,
     changeYear: true,
     onSelect: function(dateText, inst) { 
-        getChartProjData();
+        getBarChartProjData();
      }
   }).datepicker("setDate", new Date());
 
