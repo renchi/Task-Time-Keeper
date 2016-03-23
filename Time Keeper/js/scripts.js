@@ -1333,9 +1333,6 @@ var createBarChart = function(barChartData) {
           return d3.time.format('%x')(new Date(d));
       });
 
-      //chart.yAxis.tickFormat(d3.format(',d'));
-      chart.yAxis.tickFormat(d3.format('.02f'));
-
       chart.multibar.stacked(true); // default to stacked
       //chart.showControls(false); // don't show controls
       chart.xAxis
@@ -1348,7 +1345,7 @@ var createBarChart = function(barChartData) {
       chart.yAxis
           .axisLabel('Work time')
           .orient("left")
-          .tickFormat(d3.format('d'));
+          .tickFormat(d3.format('.02f'));
 
 
       d3.select('#bar-chart svg')
