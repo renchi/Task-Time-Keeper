@@ -1,8 +1,9 @@
 {
 	"manifest_version": 2,
-	"name": "Task tracker | Task timer",
-	"description": "An offline task time keeper",
-	"version": "1.0.10",
+	"name": "__MSG_appName__",
+	"description": "__MSG_appDesc__",
+	"default_locale": "en",
+	"version": "1.0.11",
 	"offline_enabled": true,
 
 	"icons": { 
