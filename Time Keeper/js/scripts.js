@@ -163,6 +163,10 @@ var taskInterface = {
         }
     });
 
+    $("#breakTime").bind( "click", function( event ) {
+
+    });
+
     $("#deleteEntries").bind( "click", function( event ) {
       var currentTime = new Date();
       // First Date Of the month 

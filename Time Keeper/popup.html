@@ -16,6 +16,7 @@
         <link href="css/bootstrap-table.min.css" rel="stylesheet" media="screen">   
         <link href="css/jquery-ui.min.css" rel="stylesheet" media="screen">  
         <link href="css/nv.d3.min.css" rel="stylesheet" media="screen"> 
+        <link href="css/bootstrap-toggle.min.css" rel="stylesheet" media="screen"> 
     </head>
     
     <body>
@@ -50,6 +51,10 @@
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Actions <b class="caret"></b>
                         <ul class="dropdown-menu">
+                            <li>
+                                <a id="breakTime" data-toggle="modal" data-target="#breakTimeModal">
+                                    <span class="glyphicon glyphicon-cutlery"></span>Set break time</a>
+                            </li>
                             <li>
                                 <a id="deleteEntries" data-toggle="modal" data-target="#deleteAllModal">
                                     <span class="glyphicon glyphicon-trash"></span>Delete entries</a>
@@ -88,9 +93,9 @@
                     </label> 
                 </div>
             </div>
-            <div class="form-group">       
+            <div class="form-group">
                 <div class="input-group">
-                    <a id="play" href="javascript:void(0)"><span class="glyphicon glyphicon-play-circle icon-success icon-main-size"></span></a>
+                   <a id="play" href="javascript:void(0)"><span class="glyphicon glyphicon-play-circle icon-success icon-main-size"></span></a>
                 </div>
             </div>
             <div class="form-group">       
@@ -367,6 +372,37 @@
     </div>
 </div>
 
+
+<div id="breakTimeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h2 class="text-center"><br>Set break time</h2>
+            </div>
+            <div class="modal-body row">
+                <form>
+                    <div class="text-center">
+                        <label type="text" class="input-lg">Enable break time setting?</label> 
+                        <input type="checkbox" checked data-toggle="toggle" data-onstyle="success" data-offstyle="danger">
+                    </div>
+                    <div class="input-group">
+                        <span style="padding-right:50px;"></span>
+                        <span class="input-group-addon" style="padding-right:26px;">From</span>
+                        <input type="text" id="breakTimeFrom" name="from" class="form-control input-md" style="width:80px;">   
+                    </div>
+                    <div class="input-group">
+                        <span style="padding-right:50px;"></span>
+                        <span class="input-group-addon" style="padding-right:44px;">To</span>
+                        <input type="text" id="breakTimeTo" name="from" class="form-control input-md" style="width:80px;">  
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <div id="removeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -478,6 +514,7 @@
     <script type="text/javascript" src="js/constants.js"></script>
     <script type="text/javascript" src="js/d3.min.js"></script>
     <script type="text/javascript" src="js/nv.d3.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap-toggle.min.js"></script>
     <script type="text/javascript" src="js/scripts.js"></script>
     </body>
 </html>
