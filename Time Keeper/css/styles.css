@@ -257,3 +257,8 @@ svg {
   width: auto;
   margin:0px auto;
 }
+
+/* make clockpicker visible in bootstrap modal window */
+.clockpicker-popover {
+z-index: 999999 !important;
+}

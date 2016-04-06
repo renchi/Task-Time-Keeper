@@ -165,6 +165,27 @@ var taskInterface = {
 
     $("#breakTime").bind( "click", function( event ) {
 
+      var input = $('#breakTimeStart').clockpicker({
+          placement: 'bottom',
+          align: 'left',
+          autoclose: true,
+          'default': 'now'
+      });
+
+      var input = $('#breakTimeStop').clockpicker({
+          placement: 'bottom',
+          align: 'left',
+          autoclose: true,
+          'default': 'now'
+      });
+
+      // Manually toggle to the minutes view
+      $('#check-minutes').click(function(e){
+          // Have to stop propagation here
+          e.stopPropagation();
+          input.clockpicker('show')
+                  .clockpicker('toggleView', 'minutes');
+      });
     });
 
     $("#deleteEntries").bind( "click", function( event ) {
@@ -1458,7 +1479,6 @@ document.addEventListener('DOMContentLoaded', function () {
   taskInterface.init();
   addListeners();
 });
-
 
 
 
