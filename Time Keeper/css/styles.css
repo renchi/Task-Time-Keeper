@@ -262,3 +262,6 @@ svg {
 .clockpicker-popover {
 z-index: 999999 !important;
 }
+
+.toggle.ios, .toggle-on.ios, .toggle-off.ios { border-radius: 20px; }
+.toggle.ios .toggle-handle { border-radius: 20px; }

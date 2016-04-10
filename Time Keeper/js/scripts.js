@@ -10,6 +10,7 @@ var db = openDatabase('tasktrack', '', 'Task track database', 2 * 1024 * 1024);
 
 db.transaction(function (tx) {  
   tx.executeSql('CREATE TABLE IF NOT EXISTS timeInfo(ID INTEGER PRIMARY KEY ASC, project_name TEXT, name TEXT, startDate DATE, startTime INTEGER, endTime INTEGER, duration INTEGER, running BOOLEAN)', [], null, onError); // table creation
+  tx.executeSql('CREATE TABLE IF NOT EXISTS breakInfo(ID INTEGER PRIMARY KEY ASC, breakTimeEnabled BOOLEAN, breakTimeStart TIME, breakTimeEnd TIME)', [], null, onError); // table creation
 });
 
 /**
@@ -20,6 +21,10 @@ function dropTaskTable() {
     tx.executeSql("DROP TABLE timeInfo", [], function (tx, results) {
       alert('Table timeInfo was droped');
     }, onError);
+
+     tx.executeSql("DROP TABLE breakInfo", [], function (tx, results) {
+      alert('Table breakInfo was droped');
+    }, onError);   
   });
 }
 
@@ -164,28 +169,40 @@ var taskInterface = {
     });
 
     $("#breakTime").bind( "click", function( event ) {
+      $('#breakTimeWarning').text("");
+      /* Initialize the table */
+      db.transaction(function (tx) {
+        tx.executeSql('SELECT * FROM breakInfo', null, function (tx, results) {
+          var len = results.rows.length, i;
+          if (len > 0) 
+          {
+            var breakTimeInfo = results.rows.item(i);
+            if ( breakTimeInfo.breakTimeEnabled == true || breakTimeInfo.breakTimeEnabled == 'true')
+            {
+              $('#toggle-breaktime').bootstrapToggle('on'); 
+            }
+            else
+            {
+              $('#toggle-breaktime').bootstrapToggle('off'); 
+            }
+            taskInterface.updateBreakTimeInputTexts($('#breakTimeStart'), breakTimeInfo.breakTimeStart);
+            taskInterface.updateBreakTimeInputTexts($('#breakTimeStop'), breakTimeInfo.breakTimeEnd);
+          } 
+          else 
+          {
+            db.transaction(function (tx) {
+                tx.executeSql("INSERT INTO breakInfo (ID, breakTimeEnabled, breakTimeStart, breakTimeEnd) VALUES (?, ?, ?, ?)",
+                   [1, false, "12:00", "13:00"], function (tx, results) {
+                    taskInterface.updateBreakTimeInputTexts($('#breakTimeStart'), "12:00");
+                    taskInterface.updateBreakTimeInputTexts($('#breakTimeStop'), "13:00");   
+                    $('#toggle-breaktime').bootstrapToggle('off');                   
+                   }, null); // executesql
+            }); //dbtransaction
+          }
 
-      var input = $('#breakTimeStart').clockpicker({
-          placement: 'bottom',
-          align: 'left',
-          autoclose: true,
-          'default': 'now'
-      });
+        }, null); // executesql
+      }); //dbtransaction
 
-      var input = $('#breakTimeStop').clockpicker({
-          placement: 'bottom',
-          align: 'left',
-          autoclose: true,
-          'default': 'now'
-      });
-
-      // Manually toggle to the minutes view
-      $('#check-minutes').click(function(e){
-          // Have to stop propagation here
-          e.stopPropagation();
-          input.clockpicker('show')
-                  .clockpicker('toggleView', 'minutes');
-      });
     });
 
     $("#deleteEntries").bind( "click", function( event ) {
@@ -370,6 +387,21 @@ var taskInterface = {
     $("#table").bind( 'refresh-options.bs.table', function (options) {
         taskInterface.refreshTimeInfoData();
     });
+
+   $( "#breakTimeSave" ).bind( "click", function( event ) {
+      event.preventDefault();
+
+      db.transaction(function (tx) {
+        var bEnabled = $("#toggle-breaktime").prop('checked');
+        var breakStarted = moment($('#breakTimeStart').val(), "hmm");
+        var breakEnded = moment($('#breakTimeStop').val(), "hmm");
+        tx.executeSql("UPDATE breakInfo SET breakTimeEnabled = ?, breakTimeStart = ?, breakTimeEnd = ? WHERE id = 1",
+                       [bEnabled, breakStarted.format("HH:mm"), breakEnded.format("HH:mm")], null, onError);
+      });
+
+      $('#breakTimeModal').modal('toggle');
+    });
+
   },
 
   getIdSelections: function ()  {
@@ -792,6 +824,29 @@ var taskInterface = {
         }, null, onError);
       });
     }
+  },
+
+  updateBreakTimeInputTexts: function (inputClock, value) {
+    var input = inputClock.clockpicker({
+        placement: 'bottom',
+        align: 'left',
+        default: value,
+        autoclose: true,
+        afterDone: function() 
+        {
+          var breakStarted = moment($('#breakTimeStart').val(), "hmm");
+          var breakEnded = moment($('#breakTimeStop').val(), "hmm");
+          if (moment(breakEnded).isAfter(breakStarted))
+          {
+            $('#breakTimeWarning').text("");
+          }
+          else
+          {
+            $('#breakTimeWarning').text("Invalid break time setting.  End time should be after start time.");
+          }
+        }
+    });
+    inputClock.val(value);
   },
 
   //////////////////////////////////////////////////////////////////////////////
