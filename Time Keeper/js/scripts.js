@@ -880,14 +880,93 @@ var taskInterface = {
   stopTask: function (task) {
     window.clearInterval(taskInterface.intervals[task.ID]); // remove timer
 
-    var start, stop, dif = 0;
+    var bBreakTimeEnabled = false;
+    var startDate, start, stop, dif, dif2 = 0;
+    var breakStarted, breakEnded = 0;
+    var split1StartTime, split1EndTime, split2StartTime, split2EndTime = 0;
+
+    db.transaction(function (tx) {
+      tx.executeSql('SELECT * FROM breakInfo WHERE id = 1', null, function (tx, results) {
+        var len = results.rows.length, i;
+        if (len > 0) 
+        {
+          var breakTimeInfo = results.rows.item(i);
+          if ( breakTimeInfo.breakTimeEnabled == true || breakTimeInfo.breakTimeEnabled == 'true')
+          {
+            bBreakTimeEnabled = true;
+          }
+          breakStarted = moment(breakTimeInfo.breakTimeStart, "HH:mm");
+          breakEnded = moment(breakTimeInfo.breakTimeEnd, "HH:mm");
+        } 
+      }, null); // executesql
+    }); //dbtransaction
 
     db.transaction(function (tx) {
       tx.executeSql('SELECT * FROM timeInfo WHERE id = ?', [task.ID], function (tx, results) {
         if (results.rows.length > 0) {
+          split1StartTime, startDate = results.rows.item(0).startDate;
           start = new Date(results.rows.item(0).startTime); // read from DB
           stop = new Date().valueOf(); // now
-          dif = stop - start; // time diff in milliseconds
+
+          if ( bBreakTimeEnabled == true ){
+            var momentStarted = new moment(start);//.format("HH:mm");
+            var momentStopped = new moment(stop);//.format("HH:mm");
+
+            var myYear = moment(startDate).year();
+            var myMonth = moment(startDate).month();
+            var myDate = moment(startDate).date();
+            var myHour, myMin = 0;
+            if ( moment(momentStarted).isBetween(breakStarted, breakEnded) &&
+                 moment(momentStopped).isBetween(breakStarted, breakEnded) && 
+                 momentStarted.date() == momentStopped.date() )
+            {
+              alert('Task start and stop are within break time');
+            }
+            else if ( moment(momentStarted).isBefore(breakStarted) &&
+                   moment(momentStopped).isAfter(breakEnded) &&
+                   momentStarted.date() == momentStopped.date())
+            {
+                var myHour = moment(breakStarted).hours();
+                var myMin = moment(breakStarted).minutes();
+                split1EndTime = moment({ y:myYear, M:myMonth, d:myDate, h:myHour, m:myMin}).valueOf();
+                split1StartTime = momentStarted.valueOf();;
+                dif = split1EndTime - split1StartTime;
+
+                myHour = moment(breakEnded).hours();
+                myMin = moment(breakEnded).minutes();
+                split2StartTime = moment({ y:myYear, M:myMonth, d:myDate, h:myHour, m:myMin}).valueOf();
+                split2EndTime = momentStopped.valueOf();
+                dif2 = split2EndTime - split2StartTime;
+            }
+            else if ( moment(momentStarted).isBetween(breakStarted, breakEnded) )
+            {
+                var myHour = moment(breakEnded).hours();
+                var myMin = moment(breakEnded).minutes();
+                split1StartTime = moment({ y:myYear, M:myMonth, d:myDate, h:myHour, m:myMin}).valueOf();
+                split1EndTime = momentStopped.valueOf();
+                dif = split1EndTime - split1StartTime;
+            }
+            else if ( moment(momentStopped).isBetween(breakStarted, breakEnded) &&
+                      momentStarted.date() == momentStopped.date() )
+            {
+                var myHour = moment(breakStarted).hours();
+                var myMin = moment(breakStarted).minutes();
+                split1EndTime = moment({ y:myYear, M:myMonth, d:myDate, h:myHour, m:myMin}).valueOf();
+                split1StartTime = momentStarted.valueOf();
+                dif = split1EndTime - split1StartTime;
+            }
+            else
+            {
+              split1StartTime = results.rows.item(0).startTime;
+              split1EndTime = stop;
+              dif = stop - start; // time diff in milliseconds
+            }
+          }
+          else{
+             split1StartTime = results.rows.item(0).startTime;
+             split1EndTime = stop;
+             dif = stop - start; // time diff in milliseconds
+          }
         } else {
           alert('Task ' + task.ID + ' not found!');
         }
@@ -898,13 +977,28 @@ var taskInterface = {
     db.transaction(function (tx) {
       var projName = $('#newProject').val();
       var name = $('#newTask').val();
-      tx.executeSql("UPDATE timeInfo SET project_name = ?, name = ?, running = ?, endTime = ?, duration = ? WHERE id = ?", 
-        [projName, name, 0, stop, dif, task.ID], null, onError);
-
-      taskInterface.index();
-      $('#timer').text("0 sec");
-      $('#newTask').val('').focus();
-      $('#newProject').val('');
+      tx.executeSql("UPDATE timeInfo SET project_name = ?, name = ?, running = ?, startTime = ?, endTime = ?, duration = ? WHERE id = ?", 
+        [projName, name, 0, split1StartTime, split1EndTime, dif, task.ID], function (tx, results) {
+          if (split2StartTime != 0 && split2EndTime != 0)
+          {
+              db.transaction(function (tx) {
+                tx.executeSql("INSERT INTO timeInfo (id, project_name, name, running, startDate, startTime, endTime, duration) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+                  [taskInterface.nextID(), projName, name, 0, startDate, split2StartTime, split2EndTime, dif2], function (tx, results) {
+                  taskInterface.index();
+                  $('#timer').text("0 sec");
+                  $('#newTask').val('').focus();
+                  $('#newProject').val('');
+                }, onError); 
+              });
+          }
+          else
+          {
+            taskInterface.index();
+            $('#timer').text("0 sec");
+            $('#newTask').val('').focus();
+            $('#newProject').val('');
+          }
+      }, onError);
     });
 
   },
