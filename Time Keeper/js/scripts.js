@@ -883,7 +883,7 @@ var taskInterface = {
         if (results.rows.length > 0) 
         {
           var startDate = results.rows.item(0).startDate;
-          var start = new Date(results.rows.item(0).startTime); // read from DB
+          var start = results.rows.item(0).startTime; // read from DB
           var stop = new Date().valueOf(); // now
           var projName = $('#newProject').val();
           var name = $('#newTask').val();
@@ -1629,6 +1629,19 @@ document.addEventListener('DOMContentLoaded', function () {
      }
   }).datepicker("setDate", new Date());
 
+  db.transaction(function (tx) {
+    tx.executeSql('SELECT * FROM breakInfo', null, function (tx, results) {
+      var len = results.rows.length, i;
+      if (len <= 0) 
+      {
+       // event.preventDefault();
+        taskInterface.handleBreakTime();
+        $('#breakTimeModal').modal('toggle');
+      } 
+
+    }, null); // executesql
+  }); //dbtransaction
+  
   taskInterface.init();
   addListeners();
 });
