@@ -19,11 +19,11 @@ db.transaction(function (tx) {
 function dropTaskTable() {
   db.transaction(function (tx) {
     tx.executeSql("DROP TABLE timeInfo", [], function (tx, results) {
-      alert('Table timeInfo was droped');
+      taskInterface.displayAlert("DB error", "Table timeInfo was dropped.");
     }, onError);
 
      tx.executeSql("DROP TABLE breakInfo", [], function (tx, results) {
-      alert('Table breakInfo was droped');
+     taskInterface.displayAlert("DB error", "Table breakInfo was dropped.");
     }, onError);   
   });
 }
@@ -32,7 +32,7 @@ function dropTaskTable() {
  * Exception hook
  */
 function onError(tx, error) {
-  alert(error.message);
+  taskInterface.displayAlert("DB error", error.message);
 }
 
 // Closure
@@ -675,7 +675,7 @@ var taskInterface = {
           taskInterface.toggleRunText();
 
         } else {
-          alert("Task " + id + " not found sorry!");
+          taskInterface.displayAlert("Time Info", "Task " + id + " not found sorry!");
         }
       }, null);
     });
@@ -687,7 +687,7 @@ var taskInterface = {
     var fProj = $('#addProjectName').val();
 
     if (fTask == null || fTask == "" || fProj == null || fProj == "") {
-        alert("Task and project names must be filled out");
+        taskInterface.displayAlert("Manual entry", "Task and project names must be filled out.");
         return false;
     }
 
@@ -748,7 +748,7 @@ var taskInterface = {
     var fProj = $('#newProject').val();
 
     if (fTask == null || fTask == "" || fProj == null || fProj == "") {
-        alert("Task and project names must be filled out");
+        taskInterface.displayAlert("New entry", "Task and project names must be filled out.");
         return false;
     }
 
@@ -893,7 +893,7 @@ var taskInterface = {
           $('#newTask').val('').focus();
           $('#newProject').val('');
         } else {
-          alert('Task ' + task.ID + ' not found!');
+          taskInterface.displayAlert("", "Task " + task.ID + " not found!" );
         }
       }, null, onError);
     });
@@ -919,6 +919,7 @@ var taskInterface = {
           breakEnded = moment(breakTimeInfo.breakTimeEnd, "HH:mm");
         } 
 
+        var bDataValid = true;
         split1StartTime =  start;
         split1EndTime = stop;
         dif = stop - start; // time diff in milliseconds
@@ -935,8 +936,8 @@ var taskInterface = {
                moment(momentStopped).isBetween(breakStarted, breakEnded) && 
                momentStarted.date() == momentStopped.date() )
           {
-            alert('Task start and stop are within break time');
-            return;
+            taskInterface.displayAlert("Break time setting", "Task start and stop time are within break time period.");
+            bDataValid = false;
           }
           else if ( moment(momentStarted).isBefore(breakStarted) &&
                  moment(momentStopped).isAfter(breakEnded) &&
@@ -973,37 +974,40 @@ var taskInterface = {
           }
         }
 
+        if (bDataValid)
+        {
+          // update record
+          db.transaction(function (tx) {
+            var firstSqlString;
+            var firstSqlParam = [];
+            if (bNewEntry){
+              firstSqlString = "INSERT INTO timeInfo (id, project_name, name, running, startDate, startTime, endTime, duration) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+              firstSqlParam = [id, projName, name, 0, startDate, split1StartTime, split1EndTime, dif];
+            }
+            else{
+              firstSqlString = "UPDATE timeInfo SET project_name = ?, name = ?, running = ?, startTime = ?, endTime = ?, duration = ? WHERE id = ?";
+              firstSqlParam = [projName, name, 0, split1StartTime, split1EndTime, dif, id];
+            }
+            tx.executeSql(firstSqlString, firstSqlParam, function (tx, results) {
+                if (split2StartTime != 0 && split2EndTime != 0)
+                {
+                    db.transaction(function (tx) {
+                      tx.executeSql("INSERT INTO timeInfo (id, project_name, name, running, startDate, startTime, endTime, duration) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+                        [taskInterface.nextID(), projName, name, 0, startDate, split2StartTime, split2EndTime, dif2], function (tx, results) {
+                        taskInterface.index();
+                      }, onError); 
+                    });
+                }
+                else
+                {
+                  taskInterface.index();
+                }
+            }, onError);
+          });
+        }
+
       }, null); // executesql
     }); //dbtransaction
-
-    // update record
-    db.transaction(function (tx) {
-      var firstSqlString;
-      var firstSqlParam = [];
-      if (bNewEntry){
-        firstSqlString = "INSERT INTO timeInfo (id, project_name, name, running, startDate, startTime, endTime, duration) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        firstSqlParam = [id, projName, name, 0, startDate, split1StartTime, split1EndTime, dif];
-      }
-      else{
-        firstSqlString = "UPDATE timeInfo SET project_name = ?, name = ?, running = ?, startTime = ?, endTime = ?, duration = ? WHERE id = ?";
-        firstSqlParam = [projName, name, 0, split1StartTime, split1EndTime, dif, id];
-      }
-      tx.executeSql(firstSqlString, firstSqlParam, function (tx, results) {
-          if (split2StartTime != 0 && split2EndTime != 0)
-          {
-              db.transaction(function (tx) {
-                tx.executeSql("INSERT INTO timeInfo (id, project_name, name, running, startDate, startTime, endTime, duration) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-                  [taskInterface.nextID(), projName, name, 0, startDate, split2StartTime, split2EndTime, dif2], function (tx, results) {
-                  taskInterface.index();
-                }, onError); 
-              });
-          }
-          else
-          {
-            taskInterface.index();
-          }
-      }, onError);
-    });
 
   },
 
@@ -1094,8 +1098,13 @@ var taskInterface = {
     }
     localStorage['lastid'] = id; // save to localStorage
     return id;
-  }
+  },
 
+  displayAlert: function (modalTitle, message) {
+    //$('#warningModalTitle').text(modalTitle);
+    $('#warningModalLabel').text(message);
+    $('#warningModal').modal('toggle');
+  }
 
 };
 
@@ -1149,7 +1158,7 @@ window.operateEvents = {
             var momentEnded = new moment(timeEnded);
             $('#editTaskEnd').val(momentEnded.format('YYYY-MM-DD HH:mm'));
           } else {
-            alert("Task " + id + "not found!");
+            taskInterface.displayAlert("", "Task " + id + " not found!" );
           }
         }, null);
       });
@@ -1170,7 +1179,7 @@ window.operateEvents = {
             var momentEnded = new moment(timeEnded);
             $('#deleteTaskEnd').text(momentEnded.format('YYYY-MM-DD HH:mm'));
           } else {
-            alert("Task " + id + "not found!");
+            taskInterface.displayAlert("", "Task " + id + " not found!" );
           }
         }, null);
       });
