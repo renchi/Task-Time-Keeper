@@ -507,17 +507,26 @@
 </div>
 
 <div id="warningModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" class="v-center">
             <div class="modal-body row">
                 <div class="alert alert-danger">
-                    <strong>Warning!</strong>&nbsp&nbsp
-                    <label id="warningModalLabel" class="text-center"></label>
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">X</button>
+                    <span class="glyphicon glyphicon-exclamation-sign icon-danger"></span>
+                    <span id="warningModalLabel" class="text-center"></span>
                 </div>
             </div>
     </div>
 </div>
 
+<div id="infoModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" class="v-center">
+            <div class="modal-body row">
+                <div class="alert alert-info">
+                    <span class="glyphicon glyphicon-info-sign icon-info"></span>
+                    <span id="infoModalLabel" class="text-center"></span>
+                </div>
+            </div>
+    </div>
+</div>
 
     <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
     <script type="text/javascript" src="js/base64.js"></script>

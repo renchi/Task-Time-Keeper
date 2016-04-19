@@ -19,11 +19,11 @@ db.transaction(function (tx) {
 function dropTaskTable() {
   db.transaction(function (tx) {
     tx.executeSql("DROP TABLE timeInfo", [], function (tx, results) {
-      taskInterface.displayAlert("DB error", "Table timeInfo was dropped.");
+      taskInterface.displayWarningAlert("DB error", "Table timeInfo was dropped.");
     }, onError);
 
      tx.executeSql("DROP TABLE breakInfo", [], function (tx, results) {
-     taskInterface.displayAlert("DB error", "Table breakInfo was dropped.");
+     taskInterface.displayWarningAlert("DB error", "Table breakInfo was dropped.");
     }, onError);   
   });
 }
@@ -32,7 +32,7 @@ function dropTaskTable() {
  * Exception hook
  */
 function onError(tx, error) {
-  taskInterface.displayAlert("DB error", error.message);
+  taskInterface.displayWarningAlert("DB error", error.message);
 }
 
 // Closure
@@ -592,7 +592,6 @@ var taskInterface = {
         var durationDisplay;
         var start = new Date(task.startTime);
         if (task.running == true) {
-          var dif = Math.floor((new Date().getTime() - start.getTime()) / 1000)
           taskInterface.startTask(task); // start task
 
           $('#play').html('<span class="glyphicon glyphicon-play-circle icon-danger icon-main-size rel="' + task.ID + '"></span>');
@@ -652,6 +651,7 @@ var taskInterface = {
     this.SummaryByProject();
     this.dailySummary(false);
     displayBarChart();
+    this.toggleRunText();
   },
 
   init: function () {
@@ -672,10 +672,8 @@ var taskInterface = {
             taskInterface.startTask(task);
           }
 
-          taskInterface.toggleRunText();
-
         } else {
-          taskInterface.displayAlert("Time Info", "Task " + id + " not found sorry!");
+          taskInterface.displayWarningAlert("Time Info", "Task " + id + " not found sorry!");
         }
       }, null);
     });
@@ -687,7 +685,7 @@ var taskInterface = {
     var fProj = $('#addProjectName').val();
 
     if (fTask == null || fTask == "" || fProj == null || fProj == "") {
-        taskInterface.displayAlert("Manual entry", "Task and project names must be filled out.");
+        taskInterface.displayWarningAlert("Manual entry", "Task and project names must be filled out.");
         return false;
     }
 
@@ -748,7 +746,7 @@ var taskInterface = {
     var fProj = $('#newProject').val();
 
     if (fTask == null || fTask == "" || fProj == null || fProj == "") {
-        taskInterface.displayAlert("New entry", "Task and project names must be filled out.");
+        taskInterface.displayWarningAlert("New entry", "Task and project names must be filled out.");
         return false;
     }
 
@@ -853,7 +851,9 @@ var taskInterface = {
   //////////////////////////////////////////////////////////////////////////////
 
   startTask: function (task) {
-    window.clearInterval(taskInterface.intervals[task.ID]); // remove timer
+    for (iid in taskInterface.intervals) {
+      window.clearInterval(taskInterface.intervals[iid]);
+    }
 
     var start = new Date().valueOf(); // set start to NOW
     var idToRun = task.ID;
@@ -877,7 +877,9 @@ var taskInterface = {
   //////////////////////////////////////////////////////////////////////////////
 
   stopTask: function (task) {
-    window.clearInterval(taskInterface.intervals[task.ID]); // remove timer
+    for (iid in taskInterface.intervals) {
+      window.clearInterval(taskInterface.intervals[iid]);
+    }
     db.transaction(function (tx) {
       tx.executeSql('SELECT * FROM timeInfo WHERE id = ?', [task.ID], function (tx, results) {
         if (results.rows.length > 0) 
@@ -893,7 +895,7 @@ var taskInterface = {
           $('#newTask').val('').focus();
           $('#newProject').val('');
         } else {
-          taskInterface.displayAlert("", "Task " + task.ID + " not found!" );
+          taskInterface.displayWarningAlert("", "Task " + task.ID + " not found!" );
         }
       }, null, onError);
     });
@@ -936,7 +938,7 @@ var taskInterface = {
                moment(momentStopped).isBetween(breakStarted, breakEnded) && 
                momentStarted.date() == momentStopped.date() )
           {
-            taskInterface.displayAlert("Break time setting", "Task start and stop time are within break time period.");
+            taskInterface.displayWarningAlert("Break time setting", "Task start and stop time are within break time period.");
             bDataValid = false;
           }
           else if ( moment(momentStarted).isBefore(breakStarted) &&
@@ -962,6 +964,7 @@ var taskInterface = {
               split1StartTime = moment({ y:myYear, M:myMonth, d:myDate, h:myHour, m:myMin}).valueOf();
               split1EndTime = momentStopped.valueOf();
               dif = split1EndTime - split1StartTime;
+              taskInterface.displayInfoAlert("New entry", "Start time was adjusted as it was within break period.");
           }
           else if ( moment(momentStopped).isBetween(breakStarted, breakEnded) &&
                     momentStarted.date() == momentStopped.date() )
@@ -971,6 +974,7 @@ var taskInterface = {
               split1EndTime = moment({ y:myYear, M:myMonth, d:myDate, h:myHour, m:myMin}).valueOf();
               split1StartTime = momentStarted.valueOf();
               dif = split1EndTime - split1StartTime;
+              taskInterface.displayInfoAlert("New entry", "End time was adjusted as it was within break period.");
           }
         }
 
@@ -995,6 +999,7 @@ var taskInterface = {
                       tx.executeSql("INSERT INTO timeInfo (id, project_name, name, running, startDate, startTime, endTime, duration) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
                         [taskInterface.nextID(), projName, name, 0, startDate, split2StartTime, split2EndTime, dif2], function (tx, results) {
                         taskInterface.index();
+                        taskInterface.displayInfoAlert("New entry", "Tasks were split as it covers break period.");
                       }, onError); 
                     });
                 }
@@ -1100,10 +1105,24 @@ var taskInterface = {
     return id;
   },
 
-  displayAlert: function (modalTitle, message) {
+  displayWarningAlert: function (modalTitle, message) {
     //$('#warningModalTitle').text(modalTitle);
     $('#warningModalLabel').text(message);
     $('#warningModal').modal('toggle');
+
+    setTimeout(function(){
+        $("#warningModal").modal('toggle');
+    }, 2500);
+  },
+
+  displayInfoAlert: function (modalTitle, message) {
+    //$('#warningModalTitle').text(modalTitle);
+    $('#infoModalLabel').text(message);
+    $('#infoModal').modal('toggle');
+
+    setTimeout(function(){
+        $("#infoModal").modal('toggle');
+    }, 3000);
   }
 
 };
@@ -1158,7 +1177,7 @@ window.operateEvents = {
             var momentEnded = new moment(timeEnded);
             $('#editTaskEnd').val(momentEnded.format('YYYY-MM-DD HH:mm'));
           } else {
-            taskInterface.displayAlert("", "Task " + id + " not found!" );
+            taskInterface.displayWarningAlert("", "Task " + id + " not found!" );
           }
         }, null);
       });
@@ -1179,7 +1198,7 @@ window.operateEvents = {
             var momentEnded = new moment(timeEnded);
             $('#deleteTaskEnd').text(momentEnded.format('YYYY-MM-DD HH:mm'));
           } else {
-            taskInterface.displayAlert("", "Task " + id + " not found!" );
+            taskInterface.displayWarningAlert("", "Task " + id + " not found!" );
           }
         }, null);
       });
